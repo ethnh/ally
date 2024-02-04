@@ -11,7 +11,6 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'app.dart';
 import 'providers/window_control.dart';
 import 'tools/tools.dart';
-import 'veilid_init.dart';
 
 void main() async {
   // Disable all debugprints in release mode
@@ -44,9 +43,6 @@ void main() async {
     final delegate = await LocalizationDelegate.create(
         fallbackLocale: 'en_US', supportedLocales: ['en_US']);
     await initializeDateFormatting();
-
-    // Start up Veilid and Veilid processor in the background
-    unawaited(initializeVeilid());
 
     // Run the app
     // Hot reloads will only restart this part, not Veilid

@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_translate/flutter_translate.dart';
 
 import '../components/default_app_bar.dart';
-import '../components/signal_strength_meter.dart';
 import '../entities/preferences.dart';
 import '../providers/window_control.dart';
 import '../tools/tools.dart';
@@ -87,7 +86,6 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
             onPressed: () => context.pop<void>(),
           ),
           actions: <Widget>[
-            const SignalStrengthMeterWidget().paddingLTRB(16, 0, 16, 0),
           ]),
 
       body: FormBuilder(

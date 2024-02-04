@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 import 'package:loggy/loggy.dart';
 
 import '../pages/developer.dart';
-import '../veilid_support/veilid_support.dart';
 
 String wrapWithLogColor(LogLevel? level, String text) {
   // XXX: https://github.com/flutter/flutter/issues/64491
@@ -41,11 +40,6 @@ String wrapWithLogColor(LogLevel? level, String text) {
         ..reset()
         ..green(bold: true);
       return pen(text);
-    case traceLevel:
-      pen
-        ..reset()
-        ..blue(bold: true);
-      return pen(text);
   }
   return text;
 }
@@ -66,13 +60,10 @@ List<LogLevel> logLevels = [
   LogLevel.warning,
   LogLevel.info,
   LogLevel.debug,
-  traceLevel,
 ];
 
 String logLevelName(LogLevel logLevel) {
   switch (logLevel) {
-    case traceLevel:
-      return translate('log.trace');
     case LogLevel.debug:
       return translate('log.debug');
     case LogLevel.info:
@@ -87,8 +78,6 @@ String logLevelName(LogLevel logLevel) {
 
 String logLevelEmoji(LogLevel logLevel) {
   switch (logLevel) {
-    case traceLevel:
-      return '👾';
     case LogLevel.debug:
       return '🐛';
     case LogLevel.info:
@@ -139,14 +128,7 @@ void initLoggy() {
     logOptions: getLogOptions(null),
   );
 
-  // ignore: do_not_use_environment
-  const isTrace = String.fromEnvironment('LOG_TRACE') != '';
-  LogLevel logLevel;
-  if (isTrace) {
-    logLevel = traceLevel;
-  } else {
-    logLevel = kDebugMode ? LogLevel.debug : LogLevel.info;
-  }
+  LogLevel logLevel = kDebugMode ? LogLevel.debug : LogLevel.info;
 
   Loggy('').level = getLogOptions(logLevel);
 }

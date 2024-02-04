@@ -14,7 +14,6 @@ import 'package:quickalert/quickalert.dart';
 import 'package:xterm/xterm.dart';
 
 import '../tools/tools.dart';
-import '../veilid_support/veilid_support.dart';
 
 final globalDebugTerminal = Terminal(
   maxLines: 50000,
@@ -71,7 +70,7 @@ class DeveloperPageState extends ConsumerState<DeveloperPage> {
     }
     _debugOut('DEBUG >>>\n$debugCommand\n');
     try {
-      final out = await Veilid.instance.debug(debugCommand);
+      final out = "TESTTESTTEST RIP-AND-TEAR";
       _debugOut('<<< DEBUG\n$out\n');
     } on Exception catch (e, st) {
       _debugOut('<<< ERROR\n$e\n<<< STACK\n$st');
@@ -155,7 +154,6 @@ class DeveloperPageState extends ConsumerState<DeveloperPage> {
                 setState(() {
                   _logLevelDropDown = value;
                   Loggy('').level = getLogOptions(value);
-                  setVeilidLogLevel(value);
                   _logLevelController.close();
                 });
               },
