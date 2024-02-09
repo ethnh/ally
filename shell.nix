@@ -98,6 +98,7 @@ mkShell {
     androidSdk
     cairo
     capnproto
+    flutter
     jdk
     pkg-config
     platformTools
