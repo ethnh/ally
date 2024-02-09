@@ -1,6 +1,6 @@
 {
     "app": {
-        "title": "VeilidChat"
+        "title": "Ally"
     },
     "app_bar": {
         "settings_tooltip": "Settings"
@@ -22,7 +22,7 @@
         "titlebar": "Create a new account",
         "header": "Account Profile",
         "create": "Create",
-        "instructions": "This information will be shared with the people you invite to connect with you on VeilidChat.",
+        "instructions": "This information will be shared with the people you invite to connect with you on Ally.",
         "error": "Account creation error",
         "name": "Name",
         "pronouns": "Pronouns"
@@ -66,7 +66,7 @@
     },
     "send_invite_dialog": {
         "title": "Send Contact Invite",
-        "connect_with_me": "Connect with me on VeilidChat!",
+        "connect_with_me": "Connect with me on Ally!",
         "enter_message_hint": "enter message for contact (optional)",
         "message_to_contact": "Message to send with invitation (not encrypted)",
         "generate": "Generate Invite",
@@ -112,7 +112,7 @@
         "could_not_decode_image": "Could not decode pasted image",
         "not_a_valid_qr_code": "Not a valid QR code",
         "error": "Failed to capture QR code",
-        "permission_error": "Capturing QR codes requires camera permisions. Allow camera permissions for VeilidChat in your settings."
+        "permission_error": "Capturing QR codes requires camera permisions. Allow camera permissions for Ally in your settings."
     },
     "enter_pin_dialog": {
         "enter_pin": "Enter PIN",
@@ -126,7 +126,7 @@
     },
     "contact_list": {
         "title": "Contact List",
-        "invite_people": "Invite people to VeilidChat",
+        "invite_people": "Invite people to Ally",
         "search": "Search contacts",
         "invitation": "Invitation"
     },

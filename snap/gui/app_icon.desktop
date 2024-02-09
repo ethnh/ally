@@ -1,7 +1,7 @@
 [Desktop Entry]
-Name=VeilidChat
-Comment=VeilidChat Private Messaging
-Exec=veilidchat
+Name=Ally
+Comment=Ally Contact Networking
+Exec=ally
 Icon=app_icon.png
 Terminal=false
 Type=Application

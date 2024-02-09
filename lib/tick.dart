@@ -1,11 +1,9 @@
 // XXX Eliminate this when we have ValueChanged
 import 'dart:async';
 
-import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 
 const int ticksPerContactInvitationCheck = 5;
 const int ticksPerNewMessageCheck = 5;
@@ -28,9 +26,6 @@ class BackgroundTicker extends ConsumerStatefulWidget {
 class BackgroundTickerState extends ConsumerState<BackgroundTicker> {
   Timer? _tickTimer;
   bool _inTick = false;
-  int _contactInvitationCheckTick = 0;
-  int _newMessageCheckTick = 0;
-  bool _hasRefreshedContactList = false;
 
   @override
   void initState() {
@@ -60,8 +55,7 @@ class BackgroundTickerState extends ConsumerState<BackgroundTicker> {
 
   Future<void> _onTick() async {
     _inTick = true;
-    try {
-    } finally {
+    try {} finally {
       _inTick = false;
     }
   }

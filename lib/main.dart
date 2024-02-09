@@ -20,7 +20,7 @@ void main() async {
 
   // Print our PID for debugging
   if (!kIsWeb) {
-    debugPrint('VeilidChat PID: $pid');
+    debugPrint('PID: $pid');
   }
 
   // Ansi colors
