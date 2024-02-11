@@ -1,8 +1,12 @@
 # Ally
 
-Ally is a contact networking application written for the Veilid (https://www.veilid.com) distributed application platform. It has a familiar and simple interface and is designed for private, and secure person-to-person communications.
+Ally is a contact networking application written for the Veilid (https://www.veilid.com) distributed application platform. 
 
-For more information about the Veilid network protocol and app development platform: https://veilid.com
+## Use Cases
+
+Combating GPT-Generated content
+Discovering people, organizations, and events(?)
+Reading interesting articles, uncurated
 
 ## Setup
 
@@ -16,5 +20,4 @@ While this is still in development, you must have a clone of the Veilid source c
 
 
 # Thanks
-Thanks to VeilidChat authors for making this possible https://gitlab.com/veilid/veilidchat
-Thanks to Prixii for making this possible https://github.com/Prixii https://github.com/Prixii/neo_cat_flutter
+See thanks.md

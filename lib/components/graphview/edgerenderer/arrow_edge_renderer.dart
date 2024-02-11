@@ -61,7 +61,7 @@ class ArrowEdgeRenderer extends EdgeRenderer {
 
       // 绘制文字
       var span = TextSpan(
-        style: defaultText,
+        style: calculateTextColor(),
         text: edge.type, // 节点之间的关系
       );
       var tp = TextPainter(

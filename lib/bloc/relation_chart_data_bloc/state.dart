@@ -122,7 +122,7 @@ class RelationChartDataState with _$RelationChartDataState {
     final edge2 = GraphEdge(alice, charlie, "Ultimate Trust",
         "${alice.id}${charlie.id}Ultimate".hashCode);
     final edge3 =
-        GraphEdge(alice, dave, "None", "${alice.id}${dave.id}None".hashCode);
+        GraphEdge(alice, dave, "", "${alice.id}${dave.id}None".hashCode);
     final edge4 =
         GraphEdge(bob, eve, "Marginal Trust", "${bob.id}${eve.id}a".hashCode);
     final edge5 = GraphEdge(
@@ -132,7 +132,7 @@ class RelationChartDataState with _$RelationChartDataState {
     final edge7 = GraphEdge(
         eve, hank, "Ultimate Trust", "${eve.id}${hank.id}Ultimate".hashCode);
     final edge8 =
-        GraphEdge(frank, iris, "None", "${frank.id}${iris.id}None".hashCode);
+        GraphEdge(frank, iris, "", "${frank.id}${iris.id}None".hashCode);
     final edge9 = GraphEdge(
         grace, jack, "Marginal Trust", "${grace.id}${jack.id}a".hashCode);
     final edge10 = GraphEdge(

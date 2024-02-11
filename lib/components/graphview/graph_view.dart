@@ -50,7 +50,7 @@ class _GraphViewState extends State<GraphView> {
             child: Text(
               relationChartDataBloc(context).state.nodeMap[node.id]?.name ?? '',
               overflow: TextOverflow.ellipsis,
-              style: calculateTextColor(background).copyWith(fontSize: 12),
+              style: calculateTextColor().copyWith(fontSize: 12),
             ),
           ),
         ),

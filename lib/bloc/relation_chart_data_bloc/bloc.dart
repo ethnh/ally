@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../node/node_event.dart';
 import '../../types/graph_edge.dart';
@@ -90,8 +91,8 @@ class RelationChartDataBloc
     return state.nodeMap[id]!;
   }
 
-  Color getColor(LabelName? label) => const Color(0xfff3f3f3);
-  // state.labelMap[label]?.color.toColor() ? const Color(0xfff3f3f3);
+  Color getColor(LabelName? label) => SchedulerBinding.instance.platformDispatcher.platformBrightness == Brightness.dark ? const Color(0xfff3f3f3) : const Color(0xff333333);
+      //state.labelMap[label]?.color; // ? const Color(0xfff3f3f3);
 
   //Future<RelationChartDataState> _onInitRelationChartData(
   //  InitRelationChartData event,
