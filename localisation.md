@@ -6,6 +6,7 @@
 
 
 Get a list of all cities in the world via https://gis.stackexchange.com/questions/185793/is-there-a-way-to-retrieve-all-cities-in-the-world-from-openstreetmap
+OR https://wiki.openstreetmap.org/wiki/Osmfilter
 OR https://download.gisgraphy.com/
 OR https://osmcode.org/pyosmium/
 

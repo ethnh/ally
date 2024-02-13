@@ -16,6 +16,11 @@ Standalone - possible business for parents interested into insights on children'
 Premium AI model may also soon be able to analyze screenshots taken at arbitrary intervals for a ongoing fee
 ### Ally-NG context
 I've been using a prototype of Ally-NG for a few months now, so it would just be an issue of integration & release (only avail macos, win, & linux & platforms supporting https://github.com/Vaibhavs10/insanely-fast-whisper)
+MacOS: https://github.com/caseyscarborough/keylogger
+Win: https://github.com/Darkempire78/Windows-Keylogger
+Win/Linux: https://github.com/PushpenderIndia/Sinister
+Linux: https://github.com/kernc/logkeys
+Universal?: https://github.com/GiacomoLaw/Keylogger
 
 ## Translation, Ally-NG backends
 also worth consider:

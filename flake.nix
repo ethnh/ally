@@ -13,7 +13,7 @@
   };
 
   inputs = {
-    nixpkgs.url = "nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:ethnh/nixpkgs";
     flake-compat.url = "github:edolstra/flake-compat";
     flake-parts = {
       url = "flake-parts";

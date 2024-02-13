@@ -1,6 +1,6 @@
 # Ally
 
-Ally is a contact networking application written for the Veilid (https://www.veilid.com) distributed application platform. 
+Ally is a contact networking application written for the [Veilid](https://www.veilid.com) distributed application platform. 
 
 ## Use Cases
 
