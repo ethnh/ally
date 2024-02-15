@@ -14,8 +14,8 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'dht.pb.dart' as $0;
-import 'veilid.pb.dart' as $1;
+import 'package:veilid_support/proto/dht.pb.dart' as $0;
+import 'package:veilid_support/proto/veilid.pb.dart' as $1;
 import 'veilidchat.pbenum.dart';
 
 export 'veilidchat.pbenum.dart';
