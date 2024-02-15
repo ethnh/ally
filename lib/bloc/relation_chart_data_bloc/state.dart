@@ -237,7 +237,8 @@ Future<RelationChartDataState> pretreatment(
     relationChartData: relationChartData,
     labelMap: classMap,
     nodeMap: nodeMap,
-    edgeMap: edgeMap,
+    edgeMap: edgeMap
+    ,
     labelVisibilityMap: classVisibilityMap,
     nodeToLabelMap: nodeToLabelMap,
     forceRefreshFlag: false,

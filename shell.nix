@@ -1,4 +1,4 @@
-{ pkgs, pre-commit-hooks, fenix, system, withEmulator ? false }:
+{ pkgs, pre-commit-hooks, fenix, system, withEmulator ? true }:
 
 with pkgs;
 
@@ -17,7 +17,7 @@ let
   android = {
     versions = {
       cmdLineToolsVersion = "11.0";
-      platformTools = "34.0.4";
+      platformTools = "34.0.5";
       buildTools = "34.0.0";
       ndk = [
         "25.1.8937393"
@@ -26,7 +26,7 @@ let
       emulator = "33.1.17";
     };
 
-    platforms = [
+    platformVersions = [
       "34"
       "33"
       "31"
@@ -46,7 +46,7 @@ let
     cmdLineToolsVersion = android.versions.cmdLineToolsVersion;
     platformToolsVersion = android.versions.platformTools;
     buildToolsVersions = [ android.versions.buildTools "30.0.3" ];
-    platformVersions = android.platforms;
+    platformVersions = android.platformVersions;
     abiVersions = android.abis;
     includeNDK = true;
     includeSystemImages = true;
@@ -130,6 +130,7 @@ mkShell {
     cmake_root="$(echo "$ANDROID_SDK_ROOT/cmake/${android.versions.cmake}"*/)"
     export CHROME_EXECUTABLE="${pkgs.chromium}/bin/chromium";
     export ANDROID_SDK_ROOT="${androidSdk}/libexec/android-sdk";
+    ${pkgs.flutter}/bin/flutter config --android-sdk "${androidSdk}/libexec/android-sdk"
     export ANDROID_HOME="${androidSdk}/libexec/android-sdk";
     export PATH="$cmake_root/bin:$PATH:${pkgs.android-studio}/bin"
     export ANDROID_NDK_ROOT="$ANDROID_SDK_ROOT/ndk-bundle";
@@ -142,7 +143,6 @@ mkShell {
     sdk.dir=$ANDROID_SDK_ROOT
     ndk.dir=$ANDROID_NDK_ROOT
     cmake.dir=$cmake_root
-    flutter config --android-sdk $ANDROID_SDK_ROOT
     EOF
 
   '';
