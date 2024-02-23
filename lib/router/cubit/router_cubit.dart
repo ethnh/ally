@@ -14,7 +14,7 @@ import '../../settings/settings.dart';
 import '../../tools/tools.dart';
 import '../../veilid_processor/views/developer.dart';
 import '../../graphview/graph_page.dart';
-
+import '../../apiglobalmapview/map.dart';
 part 'router_cubit.freezed.dart';
 part 'router_cubit.g.dart';
 part 'router_state.dart';
@@ -71,6 +71,10 @@ class RouterCubit extends Cubit<RouterState> {
           path: '/graph',
           builder: (context, state) => const GraphExamplePage(),
         ),
+        GoRoute(
+          path: '/worldcities',
+          builder: (context, state) => const InteractiveCityMapPage(),
+        ),
         ShellRoute(
           navigatorKey: _homeNavKey,
           builder: (context, state, child) =>
@@ -103,7 +107,7 @@ class RouterCubit extends Cubit<RouterState> {
   /// Redirects when our state changes
   String? redirect(BuildContext context, GoRouterState goRouterState) {
     // No matter where we are, if there's not
-
+    return '/worldcities';
     switch (goRouterState.matchedLocation) {
       case '/':
 
@@ -112,7 +116,7 @@ class RouterCubit extends Cubit<RouterState> {
           return null;
         }
 
-        return state.hasAnyAccount ? '/home' : '/graph';
+        return state.hasAnyAccount ? '/home' : '/worldcities';
       case '/new_account':
         return state.hasAnyAccount ? '/home' : null;
       case '/home':

@@ -32,10 +32,10 @@ Future<void> initializeRepositories() async {
 }
 
 Future<void> initializeVeilidChat() async {
-  log.info('Initializing Veilid');
-  await initializeVeilid();
-  log.info('Initializing Repositories');
-  await initializeRepositories();
-
+  //log.info('Initializing Veilid');
+  //await initializeVeilid();
+  //log.info('Initializing Repositories');
+  //await initializeRepositories();
+  // I'm sorry veilid :(
   eventualInitialized.complete();
 }
