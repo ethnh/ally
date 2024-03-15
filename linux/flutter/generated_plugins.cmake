@@ -3,12 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  pasteboard
-  screen_retriever
-  smart_auth
-  url_launcher_linux
   veilid
-  window_manager
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
