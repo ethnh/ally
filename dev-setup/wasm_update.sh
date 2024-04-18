@@ -5,7 +5,7 @@ source $SCRIPTDIR/_script_common
 pushd $SCRIPTDIR >/dev/null
 
 # WASM output dir
-WASMDIR=$VEILIDCHATDIR/web/wasm
+WASMDIR=$AllyDIR/web/wasm
 
 # Build veilid-wasm, passing any arguments here to the build script
 pushd $VEILIDDIR/veilid-wasm >/dev/null

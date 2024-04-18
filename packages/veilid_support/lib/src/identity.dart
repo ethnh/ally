@@ -155,7 +155,7 @@ extension IdentityMasterExtension on IdentityMaster {
                   (oldIdentity) async {
                 final oldAccountRecords =
                     IMapOfSets.from(oldIdentity.accountRecords);
-                // Only allow one account per identity for veilidchat
+                // Only allow one account per identity for Ally
                 if (oldAccountRecords.get(accountKey).isNotEmpty) {
                   throw StateError('Only one account per key in identity');
                 }

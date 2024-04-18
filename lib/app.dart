@@ -12,13 +12,13 @@ import 'settings/settings.dart';
 import 'tick.dart';
 import 'veilid_processor/veilid_processor.dart';
 
-class VeilidChatApp extends StatelessWidget {
-  const VeilidChatApp({
+class AllyApp extends StatelessWidget {
+  const AllyApp({
     required this.initialThemeData,
     super.key,
   });
 
-  static const String name = 'VeilidChat';
+  static const String name = 'Ally';
 
   final ThemeData initialThemeData;
 

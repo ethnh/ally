@@ -109,7 +109,7 @@ mkShell {
     gtk3
     libsoup_3
     webkitgtk_4_1
-
+    ninja
   ];
 
 

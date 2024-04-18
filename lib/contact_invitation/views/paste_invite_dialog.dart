@@ -53,11 +53,11 @@ class PasteInviteDialogState extends State<PasteInviteDialog> {
     }
 
     var firstline =
-        lines.indexWhere((element) => element.contains('BEGIN VEILIDCHAT'));
+        lines.indexWhere((element) => element.contains('BEGIN VEILIDCHAT ALLY'));
     firstline += 1;
 
     var lastline =
-        lines.indexWhere((element) => element.contains('END VEILIDCHAT'));
+        lines.indexWhere((element) => element.contains('END Ally'));
     if (lastline == -1) {
       lastline = lines.length;
     }
@@ -119,9 +119,9 @@ class PasteInviteDialogState extends State<PasteInviteDialog> {
             controller: _pasteTextController,
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
-              hintText: '--- BEGIN VEILIDCHAT CONTACT INVITE ----\n'
+              hintText: '--- BEGIN VEILIDCHAT ALLY CONTACT INVITE ----\n'
                   'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n'
-                  '---- END VEILIDCHAT CONTACT INVITE -----\n',
+                  '---- END Ally CONTACT INVITE -----\n',
               //labelText: translate('paste_invite_dialog.paste')
             ),
           )).paddingLTRB(0, 0, 0, 8)

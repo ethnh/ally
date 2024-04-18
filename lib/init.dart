@@ -14,7 +14,7 @@ final Completer<void> eventualInitialized = Completer<void>();
 Future<void> initializeVeilid() async {
   // Init Veilid
   Veilid.instance.initializeVeilidCore(
-      getDefaultVeilidPlatformConfig(kIsWeb, VeilidChatApp.name));
+      getDefaultVeilidPlatformConfig(kIsWeb, AllyApp.name));
 
   // Veilid logging
   initVeilidLog(kDebugMode);
@@ -31,7 +31,7 @@ Future<void> initializeRepositories() async {
   await AccountRepository.instance.init();
 }
 
-Future<void> initializeVeilidChat() async {
+Future<void> initializeAlly() async {
   //log.info('Initializing Veilid');
   //await initializeVeilid();
   //log.info('Initializing Repositories');

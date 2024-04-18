@@ -21,7 +21,7 @@ void main() async {
 
   // Print our PID for debugging
   if (!kIsWeb) {
-    debugPrint('VeilidChat PID: $pid');
+    debugPrint('Ally PID: $pid');
   }
 
   // Ansi colors
@@ -47,12 +47,12 @@ void main() async {
     await initializeDateFormatting();
 
     // Start up Veilid and Veilid processor in the background
-    unawaited(initializeVeilidChat());
+    unawaited(initializeAlly());
 
     // Run the app
     // Hot reloads will only restart this part, not Veilid
     runApp(LocalizedApp(localizationDelegate,
-        VeilidChatApp(initialThemeData: initialThemeData)));
+        AllyApp(initialThemeData: initialThemeData)));
   }, (error, stackTrace) {
     log.error('Dart Runtime: {$error}\n{$stackTrace}');
   });

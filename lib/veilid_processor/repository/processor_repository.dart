@@ -50,7 +50,7 @@ class ProcessorRepository {
     }
 
     final updateStream = await Veilid.instance
-        .startupVeilidCore(await getVeilidConfig(kIsWeb, VeilidChatApp.name));
+        .startupVeilidCore(await getVeilidConfig(kIsWeb, AllyApp.name));
     _updateSubscription = updateStream.listen((update) {
       if (update is VeilidLog) {
         processLog(update);

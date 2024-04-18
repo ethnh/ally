@@ -1,5 +1,5 @@
 {
-  description = "Ally Contact Networking Application - Fork of VeilidChat";
+  description = "Ally Contact Networking Application - Fork of Ally";
 
   nixConfig = {
     extra-substituters = [

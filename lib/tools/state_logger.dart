@@ -8,7 +8,7 @@ const Map<String, LogLevel> _blocChangeLogLevels = {
 const Map<String, LogLevel> _blocCreateCloseLogLevels = {};
 const Map<String, LogLevel> _blocErrorLogLevels = {};
 
-/// [BlocObserver] for the VeilidChat application that
+/// [BlocObserver] for the Ally application that
 /// observes all state changes.
 class StateLogger extends BlocObserver {
   /// {@macro counter_observer}

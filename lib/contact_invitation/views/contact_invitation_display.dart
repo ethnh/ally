@@ -57,9 +57,9 @@ class ContactInvitationDisplayDialogState
         repeat: true);
     final msg = message.isNotEmpty ? '$message\n' : '';
     return '$msg'
-        '--- BEGIN VEILIDCHAT CONTACT INVITE ----\n'
+        '--- BEGIN VEILIDCHAT ALLY CONTACT INVITE ----\n'
         '$invite\n'
-        '---- END VEILIDCHAT CONTACT INVITE -----\n';
+        '---- END VEILIDCHAT ALLY CONTACT INVITE -----\n';
   }
 
   @override

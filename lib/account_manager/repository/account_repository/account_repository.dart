@@ -7,7 +7,7 @@ import '../../../../proto/proto.dart' as proto;
 import '../../../tools/tools.dart';
 import '../../models/models.dart';
 
-const String veilidChatAccountKey = 'com.veilid.veilidchat';
+const String AllyAccountKey = 'com.veilid.Ally';
 
 enum AccountRepositoryChange { localAccounts, userLogins, activeLocalAccount }
 
@@ -202,7 +202,7 @@ class AccountRepository {
     // Add account with profile to DHT
     await identityMaster.addAccountToIdentity(
         identitySecret: identitySecret,
-        accountKey: veilidChatAccountKey,
+        accountKey: AllyAccountKey,
         createAccountCallback: (parent) async {
           // Make empty contact list
           final contactList = await (await DHTShortArray.create(parent: parent))
@@ -274,7 +274,7 @@ class AccountRepository {
     return true;
   }
 
-  /// Import an account from another VeilidChat instance
+  /// Import an account from another Ally instance
 
   /// Recover an account with the master identity secret
 
@@ -309,7 +309,7 @@ class AccountRepository {
 
     // Read the identity key to get the account keys
     final accountRecordInfo = await identityMaster.readAccountFromIdentity(
-        identitySecret: identitySecret, accountKey: veilidChatAccountKey);
+        identitySecret: identitySecret, accountKey: AllyAccountKey);
 
     // Add to user logins and select it
     final userLogins = await _userLogins.get();

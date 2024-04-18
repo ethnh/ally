@@ -60,6 +60,7 @@ class HomeAccountReadyMain extends StatelessWidget {
         remoteConversationRecordKey: activeChatRemoteConversationKey);
   }
 
+
   // ignore: prefer_expression_function_bodies
   Widget buildTablet(BuildContext context) {
     final w = MediaQuery.of(context).size.width;

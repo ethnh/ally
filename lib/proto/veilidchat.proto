@@ -1,5 +1,5 @@
 syntax = "proto3";
-package veilidchat;
+package Ally;
 
 import "veilid.proto";
 import "dht.proto";
@@ -158,7 +158,7 @@ enum EncryptionKeyType {
     ENCRYPTION_KEY_TYPE_PASSWORD = 3;
 }
 
-// Invitation that is shared for VeilidChat contact connections
+// Invitation that is shared for Ally contact connections
 // serialized to QR code or data blob, not send over DHT, out of band.
 // Writer secret is unique to this invitation. Writer public key is in the ContactRequestPrivate
 // in the ContactRequestInbox subkey 0 DHT key

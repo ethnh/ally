@@ -5,11 +5,11 @@ Ally is a contact networking, group-oriented document sharing (in the style of b
 ## Developers
 Contributions welcome!
 
-## VeilidChat
+## Ally
 
-This application is based on VeilidChat. This work is copyleft
+This application is based on Ally. This work is copyleft
 
-For more information about VeilidChat: https://veilid.chat
+For more information about Ally: https://veilid.chat
 
 For more information about the Veilid network protocol and app development platform: https://veilid.com
 
