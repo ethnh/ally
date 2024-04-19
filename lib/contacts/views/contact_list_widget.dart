@@ -7,24 +7,26 @@ import 'package:searchable_listview/searchable_listview.dart';
 
 import '../../proto/proto.dart' as proto;
 import '../../theme/theme.dart';
-import '../../tools/tools.dart';
 import 'contact_item_widget.dart';
 import 'empty_contact_list_widget.dart';
 
 class ContactListWidget extends StatelessWidget {
-  const ContactListWidget({required this.contactList, super.key});
+  const ContactListWidget(
+      {required this.contactList, required this.disabled, super.key});
   final IList<proto.Contact> contactList;
+  final bool disabled;
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(IterableProperty<proto.Contact>('contactList', contactList));
+    properties
+      ..add(IterableProperty<proto.Contact>('contactList', contactList))
+      ..add(DiagnosticsProperty<bool>('disabled', disabled));
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    //final textTheme = theme.textTheme;
     final scale = theme.extension<ScaleScheme>()!;
 
     return SizedBox.expand(
@@ -35,9 +37,10 @@ class ContactListWidget extends StatelessWidget {
               child: (contactList.isEmpty)
                   ? const EmptyContactListWidget()
                   : SearchableList<proto.Contact>(
-                      autoFocusOnSearch: false,
                       initialList: contactList.toList(),
-                      builder: (l, i, c) => ContactItemWidget(contact: c),
+                      builder: (l, i, c) =>
+                          ContactItemWidget(contact: c, disabled: disabled)
+                              .paddingLTRB(0, 4, 0, 0),
                       filter: (value) {
                         final lowerValue = value.toLowerCase();
                         return contactList
@@ -51,16 +54,9 @@ class ContactListWidget extends StatelessWidget {
                             .toList();
                       },
                       spaceBetweenSearchAndList: 4,
+                      defaultSuffixIconColor: scale.primaryScale.border,
                       inputDecoration: InputDecoration(
                         labelText: translate('contact_list.search'),
-                        contentPadding: const EdgeInsets.all(2),
-                        fillColor: scale.primaryScale.text,
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: scale.primaryScale.hoverBorder,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
                       ),
                     ).paddingAll(8),
             ))).paddingLTRB(8, 0, 8, 8);

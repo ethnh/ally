@@ -7,6 +7,7 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../layout/default_app_bar.dart';
+import '../../../theme/theme.dart';
 import '../../../tools/tools.dart';
 import '../../../veilid_processor/veilid_processor.dart';
 import '../../account_manager.dart';
@@ -29,7 +30,6 @@ class NewAccountPageState extends State<NewAccountPage> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      setState(() {});
       await changeWindowSetup(
           TitleBarStyle.normal, OrientationCapability.portraitOnly);
     });
@@ -55,12 +55,14 @@ class NewAccountPageState extends State<NewAccountPage> {
               validator: FormBuilderValidators.compose([
                 FormBuilderValidators.required(),
               ]),
+              textInputAction: TextInputAction.next,
             ),
             FormBuilderTextField(
               name: formFieldPronouns,
               maxLength: 64,
               decoration: InputDecoration(
                   labelText: translate('account.form_pronouns')),
+              textInputAction: TextInputAction.next,
             ),
             Row(children: [
               const Spacer(),
@@ -112,7 +114,9 @@ class NewAccountPageState extends State<NewAccountPage> {
       body: _newAccountForm(
         context,
         onSubmit: (formKey) async {
+          // dismiss the keyboard by unfocusing the textfield
           FocusScope.of(context).unfocus();
+
           try {
             final name =
                 _formKey.currentState!.fields[formFieldName]!.value as String;
@@ -123,7 +127,7 @@ class NewAccountPageState extends State<NewAccountPage> {
                 NewProfileSpec(name: name, pronouns: pronouns);
 
             await AccountRepository.instance
-                .createMasterIdentity(newProfileSpec);
+                .createWithNewMasterIdentity(newProfileSpec);
           } on Exception catch (e) {
             if (context.mounted) {
               await showErrorModal(context, translate('new_account_page.error'),

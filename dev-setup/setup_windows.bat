@@ -6,7 +6,7 @@ REM #############################################
 CALL ..\..\veilid\dev-setup\setup_windows.bat
 
 PUSHD %~dp0\..
-SET AllyDIR=%CD%
+SET VEILIDCHATDIR=%CD%
 POPD
 
 IF NOT DEFINED ProgramFiles(x86) (

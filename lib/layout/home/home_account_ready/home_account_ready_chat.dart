@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../chat/chat.dart';
+import '../../../tools/tools.dart';
 
 class HomeAccountReadyChat extends StatefulWidget {
   const HomeAccountReadyChat({super.key});
@@ -11,16 +12,18 @@ class HomeAccountReadyChat extends StatefulWidget {
 }
 
 class HomeAccountReadyChatState extends State<HomeAccountReadyChat> {
-  final _unfocusNode = FocusNode();
-
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await changeWindowSetup(
+          TitleBarStyle.normal, OrientationCapability.normal);
+    });
   }
 
   @override
   void dispose() {
-    _unfocusNode.dispose();
     super.dispose();
   }
 
@@ -36,8 +39,6 @@ class HomeAccountReadyChatState extends State<HomeAccountReadyChat> {
 
   @override
   Widget build(BuildContext context) => SafeArea(
-          child: GestureDetector(
-        onTap: () => FocusScope.of(context).requestFocus(_unfocusNode),
         child: buildChatComponent(context),
-      ));
+      );
 }

@@ -10,8 +10,23 @@ import '../../../theme/theme.dart';
 import '../../../tools/tools.dart';
 import 'main_pager/main_pager.dart';
 
-class HomeAccountReadyMain extends StatelessWidget {
+class HomeAccountReadyMain extends StatefulWidget {
   const HomeAccountReadyMain({super.key});
+
+  @override
+  State<HomeAccountReadyMain> createState() => _HomeAccountReadyMainState();
+}
+
+class _HomeAccountReadyMainState extends State<HomeAccountReadyMain> {
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await changeWindowSetup(
+          TitleBarStyle.normal, OrientationCapability.normal);
+    });
+  }
 
   Widget buildUserPanel() => Builder(builder: (context) {
         final account = context.watch<AccountRecordCubit>().state;
@@ -22,11 +37,11 @@ class HomeAccountReadyMain extends StatelessWidget {
           Row(children: [
             IconButton(
                 icon: const Icon(Icons.settings),
-                color: scale.secondaryScale.text,
+                color: scale.secondaryScale.borderText,
                 constraints: const BoxConstraints.expand(height: 64, width: 64),
                 style: ButtonStyle(
-                    backgroundColor:
-                        MaterialStateProperty.all(scale.secondaryScale.border),
+                    backgroundColor: MaterialStateProperty.all(
+                        scale.primaryScale.hoverBorder),
                     shape: MaterialStateProperty.all(
                         const RoundedRectangleBorder(
                             borderRadius:
@@ -59,7 +74,6 @@ class HomeAccountReadyMain extends StatelessWidget {
     return ChatComponent.builder(
         remoteConversationRecordKey: activeChatRemoteConversationKey);
   }
-
 
   // ignore: prefer_expression_function_bodies
   Widget buildTablet(BuildContext context) {

@@ -13,7 +13,7 @@ part 'local_account.freezed.dart';
 // on the current device.
 // Stores a copy of the IdentityMaster associated with the account
 // and the identitySecretKey optionally encrypted by an unlock code
-// This is the root of the account information tree for Ally
+// This is the root of the account information tree for VeilidChat
 //
 @freezed
 class LocalAccount with _$LocalAccount {

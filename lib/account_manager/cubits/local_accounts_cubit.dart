@@ -9,12 +9,8 @@ import '../repository/account_repository/account_repository.dart';
 class LocalAccountsCubit extends Cubit<IList<LocalAccount>> {
   LocalAccountsCubit(AccountRepository accountRepository)
       : _accountRepository = accountRepository,
-        super(IList<LocalAccount>()) {
+        super(accountRepository.getLocalAccounts()) {
     // Subscribe to streams
-    _initAccountRepositorySubscription();
-  }
-
-  void _initAccountRepositorySubscription() {
     _accountRepositorySubscription = _accountRepository.stream.listen((change) {
       switch (change) {
         case AccountRepositoryChange.localAccounts:

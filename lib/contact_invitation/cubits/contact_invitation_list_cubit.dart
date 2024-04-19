@@ -1,11 +1,12 @@
 import 'dart:async';
 
+import 'package:bloc_tools/bloc_tools.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:veilid_support/veilid_support.dart';
 
 import '../../account_manager/account_manager.dart';
-import '../../contacts/contacts.dart';
 import '../../proto/proto.dart' as proto;
 import '../../tools/tools.dart';
 import '../models/models.dart';
@@ -22,19 +23,18 @@ typedef GetEncryptionKeyCallback = Future<SecretKey?> Function(
     EncryptionKeyType encryptionKeyType,
     Uint8List encryptedSecret);
 
-@immutable
-class InvitationStatus {
-  const InvitationStatus({required this.acceptedContact});
-  final AcceptedContact? acceptedContact;
-}
-
 //////////////////////////////////////////////////
 
+typedef ContactInvitiationListState
+    = DHTShortArrayBusyState<proto.ContactInvitationRecord>;
 //////////////////////////////////////////////////
 // Mutable state for per-account contact invitations
 
 class ContactInvitationListCubit
-    extends DHTShortArrayCubit<proto.ContactInvitationRecord> {
+    extends DHTShortArrayCubit<proto.ContactInvitationRecord>
+    with
+        StateMapFollowable<ContactInvitiationListState, TypedKey,
+            proto.ContactInvitationRecord> {
   ContactInvitationListCubit({
     required ActiveAccountInfo activeAccountInfo,
     required proto.Account account,
@@ -49,11 +49,12 @@ class ContactInvitationListCubit
     final accountRecordKey =
         activeAccountInfo.userLogin.accountRecordInfo.accountRecord.recordKey;
 
-    final contactInvitationListRecordKey =
+    final contactInvitationListRecordPointer =
         account.contactInvitationRecords.toVeilid();
 
     final dhtRecord = await DHTShortArray.openOwned(
-        contactInvitationListRecordKey,
+        contactInvitationListRecordPointer,
+        debugName: 'ContactInvitationListCubit::_open::ContactInvitationList',
         parent: accountRecordKey);
 
     return dhtRecord;
@@ -85,6 +86,8 @@ class ContactInvitationListCubit
     // identity key
     late final Uint8List signedContactInvitationBytes;
     await (await pool.create(
+            debugName: 'ContactInvitationListCubit::createInvitation::'
+                'LocalConversation',
             parent: _activeAccountInfo.accountRecordKey,
             schema: DHTSchema.smpl(oCnt: 0, members: [
               DHTSchemaMember(mKey: conversationWriter.key, mCnt: 1)
@@ -109,7 +112,11 @@ class ContactInvitationListCubit
         ..private = encryptedContactRequestPrivate;
 
       // Create DHT unicast inbox for ContactRequest
+      // Subkey 0 is the ContactRequest from the initiator
+      // Subkey 1 will contain the invitation response accept/reject eventually
       await (await pool.create(
+              debugName: 'ContactInvitationListCubit::createInvitation::'
+                  'ContactRequestInbox',
               parent: _activeAccountInfo.accountRecordKey,
               schema: DHTSchema.smpl(oCnt: 1, members: [
                 DHTSchemaMember(mCnt: 1, mKey: contactRequestWriter.key)
@@ -118,6 +125,13 @@ class ContactInvitationListCubit
           .deleteScope((contactRequestInbox) async {
         // Store ContactRequest in owner subkey
         await contactRequestInbox.eventualWriteProtobuf(creq);
+        // Store an empty invitation response
+        await contactRequestInbox.eventualWriteBytes(Uint8List(0),
+            subkey: 1,
+            writer: contactRequestWriter,
+            crypto: await DHTRecordCryptoPrivate.fromTypedKeyPair(
+                TypedKeyPair.fromKeyPair(
+                    contactRequestInbox.key.kind, contactRequestWriter)));
 
         // Create ContactInvitation and SignedContactInvitation
         final cinv = proto.ContactInvitation()
@@ -144,9 +158,11 @@ class ContactInvitationListCubit
 
         // Add ContactInvitationRecord to account's list
         // if this fails, don't keep retrying, user can try again later
-        if (await shortArray.tryAddItem(cinvrec.writeToBuffer()) == false) {
-          throw Exception('Failed to add contact invitation record');
-        }
+        await operateWrite((writer) async {
+          if (await writer.tryAddItem(cinvrec.writeToBuffer()) == false) {
+            throw Exception('Failed to add contact invitation record');
+          }
+        });
       });
     });
 
@@ -155,37 +171,54 @@ class ContactInvitationListCubit
 
   Future<void> deleteInvitation(
       {required bool accepted,
-      required proto.ContactInvitationRecord contactInvitationRecord}) async {
+      required TypedKey contactRequestInboxRecordKey}) async {
     final pool = DHTRecordPool.instance;
     final accountRecordKey =
         _activeAccountInfo.userLogin.accountRecordInfo.accountRecord.recordKey;
 
     // Remove ContactInvitationRecord from account's list
-    for (var i = 0; i < shortArray.length; i++) {
-      final item = await shortArray.getItemProtobuf(
-          proto.ContactInvitationRecord.fromBuffer, i);
-      if (item == null) {
-        throw Exception('Failed to get contact invitation record');
+    final (deletedItem, success) = await operateWrite((writer) async {
+      for (var i = 0; i < writer.length; i++) {
+        final item = await writer.getItemProtobuf(
+            proto.ContactInvitationRecord.fromBuffer, i);
+        if (item == null) {
+          throw Exception('Failed to get contact invitation record');
+        }
+        if (item.contactRequestInbox.recordKey.toVeilid() ==
+            contactRequestInboxRecordKey) {
+          if (await writer.tryRemoveItem(i) != null) {
+            return item;
+          }
+          return null;
+        }
       }
-      if (item.contactRequestInbox.recordKey ==
-          contactInvitationRecord.contactRequestInbox.recordKey) {
-        await shortArray.tryRemoveItem(i);
-        break;
-      }
-    }
-    await (await pool.openOwned(
-            contactInvitationRecord.contactRequestInbox.toVeilid(),
-            parent: accountRecordKey))
-        .scope((contactRequestInbox) async {
-      // Wipe out old invitation so it shows up as invalid
-      await contactRequestInbox.tryWriteBytes(Uint8List(0));
-      await contactRequestInbox.delete();
+      return null;
     });
-    if (!accepted) {
-      await (await pool.openRead(
-              contactInvitationRecord.localConversationRecordKey.toVeilid(),
+
+    if (success && deletedItem != null) {
+      // Delete the contact request inbox
+      final contactRequestInbox = deletedItem.contactRequestInbox.toVeilid();
+      await (await pool.openOwned(contactRequestInbox,
+              debugName: 'ContactInvitationListCubit::deleteInvitation::'
+                  'ContactRequestInbox',
               parent: accountRecordKey))
-          .delete();
+          .scope((contactRequestInbox) async {
+        // Wipe out old invitation so it shows up as invalid
+        await contactRequestInbox.tryWriteBytes(Uint8List(0));
+      });
+      try {
+        await pool.deleteRecord(contactRequestInbox.recordKey);
+      } on Exception catch (e) {
+        log.debug('error removing contact request inbox: $e', e);
+      }
+      if (!accepted) {
+        try {
+          await pool
+              .deleteRecord(deletedItem.localConversationRecordKey.toVeilid());
+        } on Exception catch (e) {
+          log.debug('error removing local conversation record: $e', e);
+        }
+      }
     }
   }
 
@@ -212,12 +245,14 @@ class ContactInvitationListCubit
     // inbox with our list of extant invitations
     // If we're chatting to ourselves,
     // we are validating an invitation we have created
-    final isSelf = state.data!.value.indexWhere((cir) =>
-            cir.contactRequestInbox.recordKey.toVeilid() ==
+    final isSelf = state.state.asData!.value.indexWhere((cir) =>
+            cir.value.contactRequestInbox.recordKey.toVeilid() ==
             contactRequestInboxKey) !=
         -1;
 
     await (await pool.openRead(contactRequestInboxKey,
+            debugName: 'ContactInvitationListCubit::validateInvitation::'
+                'ContactRequestInbox',
             parent: _activeAccountInfo.accountRecordKey))
         .maybeDeleteScope(!isSelf, (contactRequestInbox) async {
       //
@@ -271,108 +306,17 @@ class ContactInvitationListCubit
     return out;
   }
 
-  Future<InvitationStatus?> checkInvitationStatus(
-      {required proto.ContactInvitationRecord contactInvitationRecord}) async {
-    // Open the contact request inbox
-    try {
-      final pool = DHTRecordPool.instance;
-      final accountRecordKey = _activeAccountInfo
-          .userLogin.accountRecordInfo.accountRecord.recordKey;
-      final writerKey = contactInvitationRecord.writerKey.toVeilid();
-      final writerSecret = contactInvitationRecord.writerSecret.toVeilid();
-      final recordKey =
-          contactInvitationRecord.contactRequestInbox.recordKey.toVeilid();
-      final writer = TypedKeyPair(
-          kind: recordKey.kind, key: writerKey, secret: writerSecret);
-      final acceptReject = await (await pool.openRead(recordKey,
-              crypto: await DHTRecordCryptoPrivate.fromTypedKeyPair(writer),
-              parent: accountRecordKey,
-              defaultSubkey: 1))
-          .scope((contactRequestInbox) async {
-        //
-        final signedContactResponse = await contactRequestInbox.getProtobuf(
-            proto.SignedContactResponse.fromBuffer,
-            forceRefresh: true);
-        if (signedContactResponse == null) {
-          return null;
-        }
-
-        final contactResponseBytes =
-            Uint8List.fromList(signedContactResponse.contactResponse);
-        final contactResponse =
-            proto.ContactResponse.fromBuffer(contactResponseBytes);
-        final contactIdentityMasterRecordKey =
-            contactResponse.identityMasterRecordKey.toVeilid();
-        final cs = await pool.veilid.getCryptoSystem(recordKey.kind);
-
-        // Fetch the remote contact's account master
-        final contactIdentityMaster = await openIdentityMaster(
-            identityMasterRecordKey: contactIdentityMasterRecordKey);
-
-        // Verify
-        final signature = signedContactResponse.identitySignature.toVeilid();
-        await cs.verify(contactIdentityMaster.identityPublicKey,
-            contactResponseBytes, signature);
-
-        // Check for rejection
-        if (!contactResponse.accept) {
-          return const InvitationStatus(acceptedContact: null);
-        }
-
-        // Pull profile from remote conversation key
-        final remoteConversationRecordKey =
-            contactResponse.remoteConversationRecordKey.toVeilid();
-
-        final conversation = ConversationCubit(
-            activeAccountInfo: _activeAccountInfo,
-            remoteIdentityPublicKey:
-                contactIdentityMaster.identityPublicTypedKey(),
-            remoteConversationRecordKey: remoteConversationRecordKey);
-        await conversation.refresh();
-
-        final remoteConversation =
-            conversation.state.data?.value.remoteConversation;
-        if (remoteConversation == null) {
-          log.info('Remote conversation could not be read. Waiting...');
-          return null;
-        }
-
-        // Complete the local conversation now that we have the remote profile
-        final localConversationRecordKey =
-            contactInvitationRecord.localConversationRecordKey.toVeilid();
-        return conversation.initLocalConversation(
-            existingConversationRecordKey: localConversationRecordKey,
-            profile: _account.profile,
-            // ignore: prefer_expression_function_bodies
-            callback: (localConversation) async {
-              return InvitationStatus(
-                  acceptedContact: AcceptedContact(
-                      remoteProfile: remoteConversation.profile,
-                      remoteIdentity: contactIdentityMaster,
-                      remoteConversationRecordKey: remoteConversationRecordKey,
-                      localConversationRecordKey: localConversationRecordKey));
-            });
-      });
-
-      if (acceptReject == null) {
-        return null;
-      }
-
-      // Delete invitation and return the accepted or rejected contact
-      await deleteInvitation(
-          accepted: acceptReject.acceptedContact != null,
-          contactInvitationRecord: contactInvitationRecord);
-
-      return acceptReject;
-    } on Exception catch (e) {
-      log.error('Exception in checkAcceptRejectContact: $e', e);
-
-      // Attempt to clean up. All this needs better lifetime management
-      await deleteInvitation(
-          accepted: false, contactInvitationRecord: contactInvitationRecord);
-
-      rethrow;
+  /// StateMapFollowable /////////////////////////
+  @override
+  IMap<TypedKey, proto.ContactInvitationRecord> getStateMap(
+      ContactInvitiationListState state) {
+    final stateValue = state.state.asData?.value;
+    if (stateValue == null) {
+      return IMap();
     }
+    return IMap.fromIterable(stateValue,
+        keyMapper: (e) => e.value.contactRequestInbox.recordKey.toVeilid(),
+        valueMapper: (e) => e.value);
   }
 
   //

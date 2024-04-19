@@ -8,7 +8,6 @@ import 'package:flutter_translate/flutter_translate.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'app.dart';
-import 'init.dart';
 import 'settings/preferences_repository.dart';
 import 'theme/theme.dart';
 import 'tools/tools.dart';
@@ -21,14 +20,13 @@ void main() async {
 
   // Print our PID for debugging
   if (!kIsWeb) {
-    debugPrint('Ally PID: $pid');
+    debugPrint('VeilidChat PID: $pid');
   }
 
   // Ansi colors
   ansiColorDisabled = false;
 
-  // Catch errors
-  await runZonedGuarded(() async {
+  Future<void> mainFunc() async {
     // Logs
     initLoggy();
 
@@ -46,14 +44,19 @@ void main() async {
         fallbackLocale: 'en_US', supportedLocales: ['en_US']);
     await initializeDateFormatting();
 
-    // Start up Veilid and Veilid processor in the background
-    unawaited(initializeAlly());
-
     // Run the app
     // Hot reloads will only restart this part, not Veilid
     runApp(LocalizedApp(localizationDelegate,
-        AllyApp(initialThemeData: initialThemeData)));
-  }, (error, stackTrace) {
-    log.error('Dart Runtime: {$error}\n{$stackTrace}');
-  });
+        VeilidChatApp(initialThemeData: initialThemeData)));
+  }
+
+  if (kDebugMode) {
+    // In debug mode, run the app without catching exceptions for debugging
+    await mainFunc();
+  } else {
+    // Catch errors in production without killing the app
+    await runZonedGuarded(mainFunc, (error, stackTrace) {
+      log.error('Dart Runtime: {$error}\n{$stackTrace}');
+    });
+  }
 }

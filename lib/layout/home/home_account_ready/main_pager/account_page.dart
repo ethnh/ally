@@ -18,8 +18,6 @@ class AccountPage extends StatefulWidget {
 }
 
 class AccountPageState extends State<AccountPage> {
-  final _unfocusNode = FocusNode();
-
   @override
   void initState() {
     super.initState();
@@ -27,7 +25,6 @@ class AccountPageState extends State<AccountPage> {
 
   @override
   void dispose() {
-    _unfocusNode.dispose();
     super.dispose();
   }
 
@@ -38,11 +35,17 @@ class AccountPageState extends State<AccountPage> {
     final textTheme = theme.textTheme;
     final scale = theme.extension<ScaleScheme>()!;
 
+    final cilState = context.watch<ContactInvitationListCubit>().state;
+    final cilBusy = cilState.busy;
     final contactInvitationRecordList =
-        context.watch<ContactInvitationListCubit>().state.data?.value ??
+        cilState.state.asData?.value.map((x) => x.value).toIList() ??
             const IListConst([]);
-    final contactList = context.watch<ContactListCubit>().state.data?.value ??
-        const IListConst([]);
+
+    final ciState = context.watch<ContactListCubit>().state;
+    final ciBusy = ciState.busy;
+    final contactList =
+        ciState.state.asData?.value.map((x) => x.value).toIList() ??
+            const IListConst([]);
 
     return SizedBox(
         child: Column(children: <Widget>[
@@ -61,15 +64,17 @@ class AccountPageState extends State<AccountPage> {
             translate('account_page.contact_invitations'),
             textAlign: TextAlign.center,
             style: textTheme.titleMedium!
-                .copyWith(color: scale.primaryScale.subtleText),
+                .copyWith(color: scale.primaryScale.borderText),
           ),
+          iconColor: scale.primaryScale.borderText,
           initiallyExpanded: true,
           children: [
             ContactInvitationListWidget(
-                contactInvitationRecordList: contactInvitationRecordList)
+                contactInvitationRecordList: contactInvitationRecordList,
+                disabled: cilBusy)
           ],
         ).paddingLTRB(8, 0, 8, 8),
-      ContactListWidget(contactList: contactList).expanded(),
+      ContactListWidget(contactList: contactList, disabled: ciBusy).expanded(),
     ]));
   }
 }

@@ -3,12 +3,14 @@ import 'package:loggy/loggy.dart';
 import 'loggy.dart';
 
 const Map<String, LogLevel> _blocChangeLogLevels = {
-  'ConnectionStateCubit': LogLevel.off
+  'ConnectionStateCubit': LogLevel.off,
+  'ActiveConversationMessagesBlocMapCubit': LogLevel.off,
+  'DHTShortArrayCubit<Message>': LogLevel.off,
 };
 const Map<String, LogLevel> _blocCreateCloseLogLevels = {};
 const Map<String, LogLevel> _blocErrorLogLevels = {};
 
-/// [BlocObserver] for the Ally application that
+/// [BlocObserver] for the VeilidChat application that
 /// observes all state changes.
 class StateLogger extends BlocObserver {
   /// {@macro counter_observer}

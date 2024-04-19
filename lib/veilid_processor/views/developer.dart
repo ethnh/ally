@@ -13,6 +13,7 @@ import 'package:quickalert/quickalert.dart';
 import 'package:veilid_support/veilid_support.dart';
 import 'package:xterm/xterm.dart';
 
+import '../../layout/layout.dart';
 import '../../theme/theme.dart';
 import '../../tools/tools.dart';
 
@@ -29,10 +30,10 @@ class DeveloperPage extends StatefulWidget {
   const DeveloperPage({super.key});
 
   @override
-  DeveloperPageState createState() => DeveloperPageState();
+  State<DeveloperPage> createState() => _DeveloperPageState();
 }
 
-class DeveloperPageState extends State<DeveloperPage> {
+class _DeveloperPageState extends State<DeveloperPage> {
   final _terminalController = TerminalController();
   final _debugCommandController = TextEditingController();
   final _logLevelController = DropdownController(duration: 250.ms);
@@ -43,6 +44,12 @@ class DeveloperPageState extends State<DeveloperPage> {
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await changeWindowSetup(
+          TitleBarStyle.normal, OrientationCapability.normal);
+    });
+
     _terminalController.addListener(() {
       setState(() {});
     });
@@ -63,12 +70,35 @@ class DeveloperPageState extends State<DeveloperPage> {
   }
 
   Future<void> _sendDebugCommand(String debugCommand) async {
+    if (debugCommand == 'pool allocations') {
+      DHTRecordPool.instance.debugPrintAllocations();
+      return;
+    }
+
+    if (debugCommand == 'pool opened') {
+      DHTRecordPool.instance.debugPrintOpened();
+      return;
+    }
+
+    if (debugCommand.startsWith('change_log_ignore ')) {
+      final args = debugCommand.split(' ');
+      if (args.length < 3) {
+        _debugOut('Incorrect number of arguments');
+        return;
+      }
+      final layer = args[1];
+      final changes = args[2].split(',');
+      Veilid.instance.changeLogIgnore(layer, changes);
+      return;
+    }
+
     if (debugCommand == 'ellet') {
       setState(() {
         _showEllet = !_showEllet;
       });
       return;
     }
+
     _debugOut('DEBUG >>>\n$debugCommand\n');
     try {
       final out = await Veilid.instance.debug(debugCommand);
@@ -110,16 +140,18 @@ class DeveloperPageState extends State<DeveloperPage> {
     // });
 
     return Scaffold(
-        appBar: AppBar(
+        backgroundColor: scale.primaryScale.primary,
+        appBar: DefaultAppBar(
+          title: Text(translate('developer.title')),
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: scale.primaryScale.text),
+            icon: Icon(Icons.arrow_back, color: scale.primaryScale.primaryText),
             onPressed: () => GoRouterHelper(context).pop(),
           ),
           actions: [
             IconButton(
                 icon: const Icon(Icons.copy),
-                color: scale.primaryScale.text,
-                disabledColor: scale.grayScale.subtleText,
+                color: scale.primaryScale.primaryText,
+                disabledColor: scale.primaryScale.primaryText.withAlpha(0x3F),
                 onPressed: _terminalController.selection == null
                     ? null
                     : () async {
@@ -127,17 +159,22 @@ class DeveloperPageState extends State<DeveloperPage> {
                       }),
             IconButton(
                 icon: const Icon(Icons.clear_all),
-                color: scale.primaryScale.text,
-                disabledColor: scale.grayScale.subtleText,
+                color: scale.primaryScale.primaryText,
+                disabledColor: scale.primaryScale.primaryText.withAlpha(0x3F),
                 onPressed: () async {
                   await QuickAlert.show(
                       context: context,
                       type: QuickAlertType.confirm,
                       title: translate('developer.are_you_sure_clear'),
-                      textColor: scale.primaryScale.text,
-                      confirmBtnColor: scale.primaryScale.elementBackground,
-                      backgroundColor: scale.primaryScale.subtleBackground,
-                      headerBackgroundColor: scale.primaryScale.background,
+                      titleColor: scale.primaryScale.appText,
+                      textColor: scale.primaryScale.subtleText,
+                      confirmBtnColor: scale.primaryScale.primary,
+                      cancelBtnTextStyle: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 18,
+                          color: scale.primaryScale.appText),
+                      backgroundColor: scale.primaryScale.appBackground,
+                      headerBackgroundColor: scale.primaryScale.primary,
                       confirmBtnText: translate('button.ok'),
                       cancelBtnText: translate('button.cancel'),
                       onConfirmBtnTap: () async {
@@ -163,13 +200,23 @@ class DeveloperPageState extends State<DeveloperPage> {
                 width: 64,
                 height: 40,
                 render: ResultRender.icon,
+                icon: SizedBox(
+                    width: 10,
+                    height: 10,
+                    child: CustomPaint(
+                        painter: DropdownArrowPainter(
+                            color: scale.primaryScale.primaryText))),
                 textStyle: textTheme.labelMedium!
-                    .copyWith(color: scale.primaryScale.text),
+                    .copyWith(color: scale.primaryScale.primaryText),
                 padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
                 openBoxDecoration: BoxDecoration(
-                    color: scale.primaryScale.activeElementBackground),
-                boxDecoration:
-                    BoxDecoration(color: scale.primaryScale.elementBackground),
+                  color: scale.primaryScale.border,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                boxDecoration: BoxDecoration(
+                  color: scale.primaryScale.hoverBorder,
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               dropdownOptions: DropdownOptions(
                 width: 160,
@@ -184,21 +231,17 @@ class DeveloperPageState extends State<DeveloperPage> {
                   align: DropdownTriangleAlign.right),
               dropdownItemOptions: DropdownItemOptions(
                   selectedTextStyle: textTheme.labelMedium!
-                      .copyWith(color: scale.primaryScale.text),
+                      .copyWith(color: scale.primaryScale.appText),
                   textStyle: textTheme.labelMedium!
-                      .copyWith(color: scale.primaryScale.text),
+                      .copyWith(color: scale.primaryScale.appText),
                   selectedBoxDecoration: BoxDecoration(
                       color: scale.primaryScale.activeElementBackground),
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
                   selectedPadding: const EdgeInsets.fromLTRB(8, 4, 8, 4)),
               dropdownList: _logLevelDropdownItems,
-            )
+            ).paddingLTRB(0, 0, 8, 0)
           ],
-          title: Text(translate('developer.title'),
-              style:
-                  textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.bold)),
-          centerTitle: true,
         ),
         body: SafeArea(
             child: Column(children: [
@@ -218,13 +261,19 @@ class DeveloperPageState extends State<DeveloperPage> {
             decoration: InputDecoration(
                 filled: true,
                 contentPadding: const EdgeInsets.fromLTRB(8, 2, 8, 2),
-                border: OutlineInputBorder(
+                enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: scale.primaryScale.border)),
+                    borderSide: BorderSide.none),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 fillColor: scale.primaryScale.subtleBackground,
                 hintText: translate('developer.command'),
                 suffixIcon: IconButton(
-                  icon: const Icon(Icons.send),
+                  icon: Icon(Icons.send,
+                      color: _debugCommandController.text.isEmpty
+                          ? scale.primaryScale.primary.withAlpha(0x3F)
+                          : scale.primaryScale.primary),
                   onPressed: _debugCommandController.text.isEmpty
                       ? null
                       : () async {

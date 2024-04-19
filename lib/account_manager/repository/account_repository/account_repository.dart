@@ -7,7 +7,7 @@ import '../../../../proto/proto.dart' as proto;
 import '../../../tools/tools.dart';
 import '../../models/models.dart';
 
-const String AllyAccountKey = 'com.veilid.Ally';
+const String veilidChatAccountKey = 'com.veilid.veilidchat';
 
 enum AccountRepositoryChange { localAccounts, userLogins, activeLocalAccount }
 
@@ -26,7 +26,8 @@ class AccountRepository {
           ? IList<LocalAccount>.fromJson(
               obj, genericFromJson(LocalAccount.fromJson))
           : IList<LocalAccount>(),
-      valueToJson: (val) => val.toJson((la) => la.toJson()));
+      valueToJson: (val) => val?.toJson((la) => la.toJson()),
+      makeInitialValue: IList<LocalAccount>.empty);
 
   static TableDBValue<IList<UserLogin>> _initUserLogins() => TableDBValue(
       tableName: 'local_account_manager',
@@ -34,13 +35,18 @@ class AccountRepository {
       valueFromJson: (obj) => obj != null
           ? IList<UserLogin>.fromJson(obj, genericFromJson(UserLogin.fromJson))
           : IList<UserLogin>(),
-      valueToJson: (val) => val.toJson((la) => la.toJson()));
+      valueToJson: (val) => val?.toJson((la) => la.toJson()),
+      makeInitialValue: IList<UserLogin>.empty);
 
   static TableDBValue<TypedKey?> _initActiveAccount() => TableDBValue(
       tableName: 'local_account_manager',
       tableKeyName: 'active_local_account',
       valueFromJson: (obj) => obj == null ? null : TypedKey.fromJson(obj),
-      valueToJson: (val) => val?.toJson());
+      valueToJson: (val) => val?.toJson(),
+      makeInitialValue: () => null);
+
+  //////////////////////////////////////////////////////////////
+  /// Fields
 
   final TableDBValue<IList<LocalAccount>> _localAccounts;
   final TableDBValue<IList<UserLogin>> _userLogins;
@@ -56,7 +62,12 @@ class AccountRepository {
     await _localAccounts.get();
     await _userLogins.get();
     await _activeLocalAccount.get();
-    await _openLoggedInDHTRecords();
+  }
+
+  Future<void> close() async {
+    await _localAccounts.close();
+    await _userLogins.close();
+    await _activeLocalAccount.close();
   }
 
   //////////////////////////////////////////////////////////////
@@ -66,18 +77,18 @@ class AccountRepository {
 
   //////////////////////////////////////////////////////////////
   /// Selectors
-  IList<LocalAccount> getLocalAccounts() => _localAccounts.requireValue;
-  TypedKey? getActiveLocalAccount() => _activeLocalAccount.requireValue;
-  IList<UserLogin> getUserLogins() => _userLogins.requireValue;
+  IList<LocalAccount> getLocalAccounts() => _localAccounts.value;
+  TypedKey? getActiveLocalAccount() => _activeLocalAccount.value;
+  IList<UserLogin> getUserLogins() => _userLogins.value;
   UserLogin? getActiveUserLogin() {
-    final activeLocalAccount = _activeLocalAccount.requireValue;
+    final activeLocalAccount = _activeLocalAccount.value;
     return activeLocalAccount == null
         ? null
         : fetchUserLogin(activeLocalAccount);
   }
 
   LocalAccount? fetchLocalAccount(TypedKey accountMasterRecordKey) {
-    final localAccounts = _localAccounts.requireValue;
+    final localAccounts = _localAccounts.value;
     final idx = localAccounts.indexWhere(
         (e) => e.identityMaster.masterRecordKey == accountMasterRecordKey);
     if (idx == -1) {
@@ -87,7 +98,7 @@ class AccountRepository {
   }
 
   UserLogin? fetchUserLogin(TypedKey accountMasterRecordKey) {
-    final userLogins = _userLogins.requireValue;
+    final userLogins = _userLogins.value;
     final idx = userLogins
         .indexWhere((e) => e.accountMasterRecordKey == accountMasterRecordKey);
     if (idx == -1) {
@@ -131,26 +142,12 @@ class AccountRepository {
           activeAccountInfo: null);
     }
 
-    // Pull the account DHT key, decode it and return it
-    final pool = DHTRecordPool.instance;
-    final accountRecord = pool
-        .getOpenedRecord(userLogin.accountRecordInfo.accountRecord.recordKey);
-    if (accountRecord == null) {
-      // Account could not be read or decrypted from DHT
-      return AccountInfo(
-          status: AccountInfoStatus.accountInvalid,
-          active: active,
-          activeAccountInfo: null);
-    }
-
     // Got account, decrypted and decoded
     return AccountInfo(
       status: AccountInfoStatus.accountReady,
       active: active,
-      activeAccountInfo: ActiveAccountInfo(
-          localAccount: localAccount,
-          userLogin: userLogin,
-          accountRecord: accountRecord),
+      activeAccountInfo:
+          ActiveAccountInfo(localAccount: localAccount, userLogin: userLogin),
     );
   }
 
@@ -171,7 +168,9 @@ class AccountRepository {
   /// Creates a new master identity, an account associated with the master
   /// identity, stores the account in the identity key and then logs into
   /// that account with no password set at this time
-  Future<void> createMasterIdentity(NewProfileSpec newProfileSpec) async {
+  Future<void> createWithNewMasterIdentity(
+      NewProfileSpec newProfileSpec) async {
+    log.debug('Creating master identity');
     final imws = await IdentityMasterWithSecrets.create();
     try {
       final localAccount = await _newLocalAccount(
@@ -197,25 +196,36 @@ class AccountRepository {
       required NewProfileSpec newProfileSpec,
       EncryptionKeyType encryptionKeyType = EncryptionKeyType.none,
       String encryptionKey = ''}) async {
+    log.debug('Creating new local account');
+
     final localAccounts = await _localAccounts.get();
 
     // Add account with profile to DHT
     await identityMaster.addAccountToIdentity(
         identitySecret: identitySecret,
-        accountKey: AllyAccountKey,
+        accountKey: veilidChatAccountKey,
         createAccountCallback: (parent) async {
           // Make empty contact list
-          final contactList = await (await DHTShortArray.create(parent: parent))
-              .scope((r) async => r.record.ownedDHTRecordPointer);
+          log.debug('Creating contacts list');
+          final contactList = await (await DHTShortArray.create(
+                  debugName: 'AccountRepository::_newLocalAccount::Contacts',
+                  parent: parent))
+              .scope((r) async => r.recordPointer);
 
           // Make empty contact invitation record list
-          final contactInvitationRecords =
-              await (await DHTShortArray.create(parent: parent))
-                  .scope((r) async => r.record.ownedDHTRecordPointer);
+          log.debug('Creating contact invitation records list');
+          final contactInvitationRecords = await (await DHTShortArray.create(
+                  debugName:
+                      'AccountRepository::_newLocalAccount::ContactInvitations',
+                  parent: parent))
+              .scope((r) async => r.recordPointer);
 
           // Make empty chat record list
-          final chatRecords = await (await DHTShortArray.create(parent: parent))
-              .scope((r) async => r.record.ownedDHTRecordPointer);
+          log.debug('Creating chat records list');
+          final chatRecords = await (await DHTShortArray.create(
+                  debugName: 'AccountRepository::_newLocalAccount::Chats',
+                  parent: parent))
+              .scope((r) async => r.recordPointer);
 
           // Make account object
           final account = proto.Account()
@@ -274,7 +284,7 @@ class AccountRepository {
     return true;
   }
 
-  /// Import an account from another Ally instance
+  /// Import an account from another VeilidChat instance
 
   /// Recover an account with the master identity secret
 
@@ -290,7 +300,7 @@ class AccountRepository {
 
     if (accountMasterRecordKey != null) {
       // Assert the specified record key can be found, will throw if not
-      final _ = _userLogins.requireValue.firstWhere(
+      final _ = _userLogins.value.firstWhere(
           (ul) => ul.accountMasterRecordKey == accountMasterRecordKey);
     }
     await _activeLocalAccount.set(accountMasterRecordKey);
@@ -299,17 +309,18 @@ class AccountRepository {
 
   Future<bool> _decryptedLogin(
       IdentityMaster identityMaster, SecretKey identitySecret) async {
-    final cs = await Veilid.instance
-        .getCryptoSystem(identityMaster.identityRecordKey.kind);
-    final keyOk = await cs.validateKeyPair(
-        identityMaster.identityPublicKey, identitySecret);
-    if (!keyOk) {
-      throw Exception('Identity is corrupted');
-    }
+    // Verify identity secret works and return the valid cryptosystem
+    final cs = await identityMaster.validateIdentitySecret(identitySecret);
 
     // Read the identity key to get the account keys
-    final accountRecordInfo = await identityMaster.readAccountFromIdentity(
-        identitySecret: identitySecret, accountKey: AllyAccountKey);
+    final accountRecordInfoList = await identityMaster.readAccountsFromIdentity(
+        identitySecret: identitySecret, accountKey: veilidChatAccountKey);
+    if (accountRecordInfoList.length > 1) {
+      throw IdentityException.limitExceeded;
+    } else if (accountRecordInfoList.isEmpty) {
+      throw IdentityException.noAccount;
+    }
+    final accountRecordInfo = accountRecordInfoList.single;
 
     // Add to user logins and select it
     final userLogins = await _userLogins.get();
@@ -328,12 +339,10 @@ class AccountRepository {
 
     await _userLogins.set(newUserLogins);
     await _activeLocalAccount.set(identityMaster.masterRecordKey);
+
     _streamController
       ..add(AccountRepositoryChange.userLogins)
       ..add(AccountRepositoryChange.activeLocalAccount);
-
-    // Ensure all logins are opened
-    await _openLoggedInDHTRecords();
 
     return true;
   }
@@ -366,7 +375,6 @@ class AccountRepository {
 
   Future<void> logout(TypedKey? accountMasterRecordKey) async {
     // Resolve which user to log out
-    //final userLogins = await _userLogins.get();
     final activeLocalAccount = await _activeLocalAccount.get();
     final logoutUser = accountMasterRecordKey ?? activeLocalAccount;
     if (logoutUser == null) {
@@ -380,13 +388,6 @@ class AccountRepository {
       return;
     }
 
-    // Close DHT records for this account
-    final pool = DHTRecordPool.instance;
-    final accountRecordKey =
-        logoutUserLogin.accountRecordInfo.accountRecord.recordKey;
-    final accountRecord = pool.getOpenedRecord(accountRecordKey);
-    await accountRecord?.close();
-
     // Remove user from active logins list
     final newUserLogins = (await _userLogins.get())
         .removeWhere((ul) => ul.accountMasterRecordKey == logoutUser);
@@ -394,40 +395,16 @@ class AccountRepository {
     _streamController.add(AccountRepositoryChange.userLogins);
   }
 
-  Future<void> _openLoggedInDHTRecords() async {
+  Future<DHTRecord> openAccountRecord(UserLogin userLogin) async {
+    final localAccount = fetchLocalAccount(userLogin.accountMasterRecordKey)!;
+
+    // Record not yet open, do it
     final pool = DHTRecordPool.instance;
+    final record = await pool.openOwned(
+        userLogin.accountRecordInfo.accountRecord,
+        debugName: 'AccountRepository::openAccountRecord::AccountRecord',
+        parent: localAccount.identityMaster.identityRecordKey);
 
-    // For all user logins if they arent open yet
-    final userLogins = await _userLogins.get();
-    for (final userLogin in userLogins) {
-      //// Account record key /////////////////////////////
-      final accountRecordKey =
-          userLogin.accountRecordInfo.accountRecord.recordKey;
-      final existingAccountRecord = pool.getOpenedRecord(accountRecordKey);
-      if (existingAccountRecord == null) {
-        final localAccount =
-            fetchLocalAccount(userLogin.accountMasterRecordKey);
-
-        // Record not yet open, do it
-        final record = await pool.openOwned(
-            userLogin.accountRecordInfo.accountRecord,
-            parent: localAccount!.identityMaster.identityRecordKey);
-        // Watch the record's only (default) key
-        await record.watch();
-      }
-    }
-  }
-
-  Future<void> _closeLoggedInDHTRecords() async {
-    final pool = DHTRecordPool.instance;
-
-    final userLogins = await _userLogins.get();
-    for (final userLogin in userLogins) {
-      //// Account record key /////////////////////////////
-      final accountRecordKey =
-          userLogin.accountRecordInfo.accountRecord.recordKey;
-      final accountRecord = pool.getOpenedRecord(accountRecordKey);
-      await accountRecord?.close();
-    }
+    return record;
   }
 }

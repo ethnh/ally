@@ -50,7 +50,7 @@ class ProcessorRepository {
     }
 
     final updateStream = await Veilid.instance
-        .startupVeilidCore(await getVeilidConfig(kIsWeb, AllyApp.name));
+        .startupVeilidCore(await getVeilidConfig(kIsWeb, VeilidChatApp.name));
     _updateSubscription = updateStream.listen((update) {
       if (update is VeilidLog) {
         processLog(update);
@@ -119,8 +119,10 @@ class ProcessorRepository {
   }
 
   void processUpdateValueChange(VeilidUpdateValueChange updateValueChange) {
+    log.debug('UpdateValueChange: ${updateValueChange.toJson()}');
+
     // Send value updates to DHTRecordPool
-    DHTRecordPool.instance.processUpdateValueChange(updateValueChange);
+    DHTRecordPool.instance.processRemoteValueChange(updateValueChange);
   }
 
   ////////////////////////////////////////////

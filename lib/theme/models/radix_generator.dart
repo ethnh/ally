@@ -1,13 +1,16 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:radix_colors/radix_colors.dart';
 
+import '../../tools/tools.dart';
 import 'scale_color.dart';
+import 'scale_input_decorator_theme.dart';
 import 'scale_scheme.dart';
 
 enum RadixThemeColor {
-  scarlet, // tomato + red + violet
-  babydoll, // crimson + purple + pink
+  scarlet, // red + violet + tomato
+  babydoll, // crimson + pink + purple
   vapor, // pink + cyan + plum
   gold, // yellow + amber + orange
   garden, // grass + orange + brown
@@ -16,7 +19,7 @@ enum RadixThemeColor {
   lapis, // blue + indigo + mint
   eggplant, // violet + purple + indigo
   lime, // lime + yellow + orange
-  grim, // mauve + slate + sage
+  grim, // grey + purple + brown
 }
 
 enum _RadixBaseColor {
@@ -270,7 +273,7 @@ RadixColor _radixColorSteps(
 }
 
 extension ToScaleColor on RadixColor {
-  ScaleColor toScale() => ScaleColor(
+  ScaleColor toScale(RadixScaleExtra scaleExtra) => ScaleColor(
         appBackground: step1,
         subtleBackground: step2,
         elementBackground: step3,
@@ -279,264 +282,329 @@ extension ToScaleColor on RadixColor {
         subtleBorder: step6,
         border: step7,
         hoverBorder: step8,
-        background: step9,
-        hoverBackground: step10,
+        primary: step9,
+        hoverPrimary: step10,
         subtleText: step11,
-        text: step12,
+        appText: step12,
+        primaryText: scaleExtra.foregroundText,
+        borderText: step12,
+        dialogBorder: step9,
+        calloutBackground: step9,
+        calloutText: scaleExtra.foregroundText,
       );
 }
 
-class RadixScheme {
-  RadixScheme(
-      {required this.primaryScale,
-      required this.primaryAlphaScale,
-      required this.secondaryScale,
-      required this.tertiaryScale,
-      required this.grayScale,
-      required this.errorScale});
+class RadixScaleExtra {
+  RadixScaleExtra({required this.foregroundText});
 
-  RadixColor primaryScale;
-  RadixColor primaryAlphaScale;
-  RadixColor secondaryScale;
-  RadixColor tertiaryScale;
-  RadixColor grayScale;
-  RadixColor errorScale;
+  final Color foregroundText;
+}
+
+class RadixScheme {
+  const RadixScheme({
+    required this.primaryScale,
+    required this.primaryExtra,
+    required this.primaryAlphaScale,
+    required this.primaryAlphaExtra,
+    required this.secondaryScale,
+    required this.secondaryExtra,
+    required this.tertiaryScale,
+    required this.tertiaryExtra,
+    required this.grayScale,
+    required this.grayExtra,
+    required this.errorScale,
+    required this.errorExtra,
+  });
+
+  final RadixColor primaryScale;
+  final RadixScaleExtra primaryExtra;
+  final RadixColor primaryAlphaScale;
+  final RadixScaleExtra primaryAlphaExtra;
+  final RadixColor secondaryScale;
+  final RadixScaleExtra secondaryExtra;
+  final RadixColor tertiaryScale;
+  final RadixScaleExtra tertiaryExtra;
+  final RadixColor grayScale;
+  final RadixScaleExtra grayExtra;
+  final RadixColor errorScale;
+  final RadixScaleExtra errorExtra;
 
   ScaleScheme toScale() => ScaleScheme(
-        primaryScale: primaryScale.toScale(),
-        primaryAlphaScale: primaryAlphaScale.toScale(),
-        secondaryScale: secondaryScale.toScale(),
-        tertiaryScale: tertiaryScale.toScale(),
-        grayScale: grayScale.toScale(),
-        errorScale: errorScale.toScale(),
+        primaryScale: primaryScale.toScale(primaryExtra),
+        primaryAlphaScale: primaryAlphaScale.toScale(primaryAlphaExtra),
+        secondaryScale: secondaryScale.toScale(secondaryExtra),
+        tertiaryScale: tertiaryScale.toScale(tertiaryExtra),
+        grayScale: grayScale.toScale(grayExtra),
+        errorScale: errorScale.toScale(errorExtra),
       );
 }
 
 RadixScheme _radixScheme(Brightness brightness, RadixThemeColor themeColor) {
   late RadixScheme radixScheme;
   switch (themeColor) {
-    // tomato + red + violet
+    // red + violet + tomato
     case RadixThemeColor.scarlet:
       radixScheme = RadixScheme(
-          primaryScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.tomato),
-          primaryAlphaScale:
-              _radixColorSteps(brightness, true, _RadixBaseColor.tomato),
-          secondaryScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.red),
-          tertiaryScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.violet),
-          grayScale: _radixGraySteps(brightness, false, _RadixBaseColor.tomato),
-          errorScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.yellow));
+        primaryScale: _radixColorSteps(brightness, false, _RadixBaseColor.red),
+        primaryExtra: RadixScaleExtra(foregroundText: Colors.white),
+        primaryAlphaScale:
+            _radixColorSteps(brightness, true, _RadixBaseColor.red),
+        primaryAlphaExtra: RadixScaleExtra(foregroundText: Colors.white),
+        secondaryScale:
+            _radixColorSteps(brightness, false, _RadixBaseColor.violet),
+        secondaryExtra: RadixScaleExtra(foregroundText: Colors.white),
+        tertiaryScale:
+            _radixColorSteps(brightness, false, _RadixBaseColor.tomato),
+        tertiaryExtra: RadixScaleExtra(foregroundText: Colors.white),
+        grayScale: _radixGraySteps(brightness, false, _RadixBaseColor.red),
+        grayExtra: RadixScaleExtra(foregroundText: Colors.white),
+        errorScale: _radixColorSteps(brightness, false, _RadixBaseColor.yellow),
+        errorExtra: RadixScaleExtra(foregroundText: Colors.black),
+      );
 
-    // crimson + purple + pink
+    // crimson + pink + purple
     case RadixThemeColor.babydoll:
       radixScheme = RadixScheme(
           primaryScale:
               _radixColorSteps(brightness, false, _RadixBaseColor.crimson),
+          primaryExtra: RadixScaleExtra(foregroundText: Colors.white),
           primaryAlphaScale:
               _radixColorSteps(brightness, true, _RadixBaseColor.crimson),
+          primaryAlphaExtra: RadixScaleExtra(foregroundText: Colors.white),
           secondaryScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.purple),
-          tertiaryScale:
               _radixColorSteps(brightness, false, _RadixBaseColor.pink),
+          secondaryExtra: RadixScaleExtra(foregroundText: Colors.white),
+          tertiaryScale:
+              _radixColorSteps(brightness, false, _RadixBaseColor.purple),
+          tertiaryExtra: RadixScaleExtra(foregroundText: Colors.white),
           grayScale:
               _radixGraySteps(brightness, false, _RadixBaseColor.crimson),
+          grayExtra: RadixScaleExtra(foregroundText: Colors.white),
           errorScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.orange));
+              _radixColorSteps(brightness, false, _RadixBaseColor.orange),
+          errorExtra: RadixScaleExtra(foregroundText: Colors.white));
     // pink + cyan + plum
     case RadixThemeColor.vapor:
       radixScheme = RadixScheme(
           primaryScale:
               _radixColorSteps(brightness, false, _RadixBaseColor.pink),
+          primaryExtra: RadixScaleExtra(foregroundText: Colors.white),
           primaryAlphaScale:
               _radixColorSteps(brightness, true, _RadixBaseColor.pink),
+          primaryAlphaExtra: RadixScaleExtra(foregroundText: Colors.white),
           secondaryScale:
               _radixColorSteps(brightness, false, _RadixBaseColor.cyan),
+          secondaryExtra: RadixScaleExtra(foregroundText: Colors.white),
           tertiaryScale:
               _radixColorSteps(brightness, false, _RadixBaseColor.plum),
+          tertiaryExtra: RadixScaleExtra(foregroundText: Colors.white),
           grayScale: _radixGraySteps(brightness, false, _RadixBaseColor.pink),
-          errorScale: _radixColorSteps(brightness, false, _RadixBaseColor.red));
+          grayExtra: RadixScaleExtra(foregroundText: Colors.white),
+          errorScale: _radixColorSteps(brightness, false, _RadixBaseColor.red),
+          errorExtra: RadixScaleExtra(foregroundText: Colors.white));
     // yellow + amber + orange
     case RadixThemeColor.gold:
       radixScheme = RadixScheme(
           primaryScale:
               _radixColorSteps(brightness, false, _RadixBaseColor.yellow),
+          primaryExtra: RadixScaleExtra(foregroundText: Colors.black),
           primaryAlphaScale:
               _radixColorSteps(brightness, true, _RadixBaseColor.yellow),
+          primaryAlphaExtra: RadixScaleExtra(foregroundText: Colors.black),
           secondaryScale:
               _radixColorSteps(brightness, false, _RadixBaseColor.amber),
+          secondaryExtra: RadixScaleExtra(foregroundText: Colors.black),
           tertiaryScale:
               _radixColorSteps(brightness, false, _RadixBaseColor.orange),
+          tertiaryExtra: RadixScaleExtra(foregroundText: Colors.black),
           grayScale: _radixGraySteps(brightness, false, _RadixBaseColor.yellow),
-          errorScale: _radixColorSteps(brightness, false, _RadixBaseColor.red));
+          grayExtra: RadixScaleExtra(foregroundText: Colors.white),
+          errorScale: _radixColorSteps(brightness, false, _RadixBaseColor.red),
+          errorExtra: RadixScaleExtra(foregroundText: Colors.white));
     // grass + orange + brown
     case RadixThemeColor.garden:
       radixScheme = RadixScheme(
           primaryScale:
               _radixColorSteps(brightness, false, _RadixBaseColor.grass),
+          primaryExtra: RadixScaleExtra(foregroundText: Colors.white),
           primaryAlphaScale:
               _radixColorSteps(brightness, true, _RadixBaseColor.grass),
+          primaryAlphaExtra: RadixScaleExtra(foregroundText: Colors.white),
           secondaryScale:
               _radixColorSteps(brightness, false, _RadixBaseColor.orange),
+          secondaryExtra: RadixScaleExtra(foregroundText: Colors.white),
           tertiaryScale:
               _radixColorSteps(brightness, false, _RadixBaseColor.brown),
+          tertiaryExtra: RadixScaleExtra(foregroundText: Colors.white),
           grayScale: _radixGraySteps(brightness, false, _RadixBaseColor.grass),
+          grayExtra: RadixScaleExtra(foregroundText: Colors.white),
           errorScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.tomato));
+              _radixColorSteps(brightness, false, _RadixBaseColor.tomato),
+          errorExtra: RadixScaleExtra(foregroundText: Colors.white));
     // green + brown + amber
     case RadixThemeColor.forest:
       radixScheme = RadixScheme(
           primaryScale:
               _radixColorSteps(brightness, false, _RadixBaseColor.green),
+          primaryExtra: RadixScaleExtra(foregroundText: Colors.white),
           primaryAlphaScale:
               _radixColorSteps(brightness, true, _RadixBaseColor.green),
+          primaryAlphaExtra: RadixScaleExtra(foregroundText: Colors.white),
           secondaryScale:
               _radixColorSteps(brightness, false, _RadixBaseColor.brown),
+          secondaryExtra: RadixScaleExtra(foregroundText: Colors.white),
           tertiaryScale:
               _radixColorSteps(brightness, false, _RadixBaseColor.amber),
+          tertiaryExtra: RadixScaleExtra(foregroundText: Colors.black),
           grayScale: _radixGraySteps(brightness, false, _RadixBaseColor.green),
+          grayExtra: RadixScaleExtra(foregroundText: Colors.white),
           errorScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.tomato));
+              _radixColorSteps(brightness, false, _RadixBaseColor.tomato),
+          errorExtra: RadixScaleExtra(foregroundText: Colors.white));
+
     // sky + teal + violet
     case RadixThemeColor.arctic:
       radixScheme = RadixScheme(
           primaryScale:
               _radixColorSteps(brightness, false, _RadixBaseColor.sky),
+          primaryExtra: RadixScaleExtra(foregroundText: Colors.black),
           primaryAlphaScale:
               _radixColorSteps(brightness, true, _RadixBaseColor.sky),
+          primaryAlphaExtra: RadixScaleExtra(foregroundText: Colors.black),
           secondaryScale:
               _radixColorSteps(brightness, false, _RadixBaseColor.teal),
+          secondaryExtra: RadixScaleExtra(foregroundText: Colors.white),
           tertiaryScale:
               _radixColorSteps(brightness, false, _RadixBaseColor.violet),
+          tertiaryExtra: RadixScaleExtra(foregroundText: Colors.white),
           grayScale: _radixGraySteps(brightness, false, _RadixBaseColor.sky),
+          grayExtra: RadixScaleExtra(foregroundText: Colors.white),
           errorScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.crimson));
+              _radixColorSteps(brightness, false, _RadixBaseColor.crimson),
+          errorExtra: RadixScaleExtra(foregroundText: Colors.white));
     // blue + indigo + mint
     case RadixThemeColor.lapis:
       radixScheme = RadixScheme(
-          primaryScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.blue),
-          primaryAlphaScale:
-              _radixColorSteps(brightness, true, _RadixBaseColor.blue),
-          secondaryScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.indigo),
-          tertiaryScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.mint),
-          grayScale: _radixGraySteps(brightness, false, _RadixBaseColor.blue),
-          errorScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.crimson));
+        primaryScale: _radixColorSteps(brightness, false, _RadixBaseColor.blue),
+        primaryExtra: RadixScaleExtra(foregroundText: Colors.white),
+        primaryAlphaScale:
+            _radixColorSteps(brightness, true, _RadixBaseColor.blue),
+        primaryAlphaExtra: RadixScaleExtra(foregroundText: Colors.white),
+        secondaryScale:
+            _radixColorSteps(brightness, false, _RadixBaseColor.indigo),
+        secondaryExtra: RadixScaleExtra(foregroundText: Colors.white),
+        tertiaryScale:
+            _radixColorSteps(brightness, false, _RadixBaseColor.mint),
+        tertiaryExtra: RadixScaleExtra(foregroundText: Colors.black),
+        grayScale: _radixGraySteps(brightness, false, _RadixBaseColor.blue),
+        grayExtra: RadixScaleExtra(foregroundText: Colors.white),
+        errorScale:
+            _radixColorSteps(brightness, false, _RadixBaseColor.crimson),
+        errorExtra: RadixScaleExtra(foregroundText: Colors.white),
+      );
     // violet + purple + indigo
     case RadixThemeColor.eggplant:
       radixScheme = RadixScheme(
-          primaryScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.violet),
-          primaryAlphaScale:
-              _radixColorSteps(brightness, true, _RadixBaseColor.violet),
-          secondaryScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.purple),
-          tertiaryScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.indigo),
-          grayScale: _radixGraySteps(brightness, false, _RadixBaseColor.violet),
-          errorScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.crimson));
+        primaryScale:
+            _radixColorSteps(brightness, false, _RadixBaseColor.violet),
+        primaryExtra: RadixScaleExtra(foregroundText: Colors.white),
+        primaryAlphaScale:
+            _radixColorSteps(brightness, true, _RadixBaseColor.violet),
+        primaryAlphaExtra: RadixScaleExtra(foregroundText: Colors.white),
+        secondaryScale:
+            _radixColorSteps(brightness, false, _RadixBaseColor.purple),
+        secondaryExtra: RadixScaleExtra(foregroundText: Colors.white),
+        tertiaryScale:
+            _radixColorSteps(brightness, false, _RadixBaseColor.indigo),
+        tertiaryExtra: RadixScaleExtra(foregroundText: Colors.white),
+        grayScale: _radixGraySteps(brightness, false, _RadixBaseColor.violet),
+        grayExtra: RadixScaleExtra(foregroundText: Colors.white),
+        errorScale:
+            _radixColorSteps(brightness, false, _RadixBaseColor.crimson),
+        errorExtra: RadixScaleExtra(foregroundText: Colors.white),
+      );
     // lime + yellow + orange
     case RadixThemeColor.lime:
       radixScheme = RadixScheme(
-          primaryScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.lime),
-          primaryAlphaScale:
-              _radixColorSteps(brightness, true, _RadixBaseColor.lime),
-          secondaryScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.yellow),
-          tertiaryScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.orange),
-          grayScale: _radixGraySteps(brightness, false, _RadixBaseColor.lime),
-          errorScale: _radixColorSteps(brightness, false, _RadixBaseColor.red));
+        primaryScale: _radixColorSteps(brightness, false, _RadixBaseColor.lime),
+        primaryExtra: RadixScaleExtra(foregroundText: Colors.black),
+        primaryAlphaScale:
+            _radixColorSteps(brightness, true, _RadixBaseColor.lime),
+        primaryAlphaExtra: RadixScaleExtra(foregroundText: Colors.black),
+        secondaryScale:
+            _radixColorSteps(brightness, false, _RadixBaseColor.yellow),
+        secondaryExtra: RadixScaleExtra(foregroundText: Colors.black),
+        tertiaryScale:
+            _radixColorSteps(brightness, false, _RadixBaseColor.orange),
+        tertiaryExtra: RadixScaleExtra(foregroundText: Colors.white),
+        grayScale: _radixGraySteps(brightness, false, _RadixBaseColor.lime),
+        grayExtra: RadixScaleExtra(foregroundText: Colors.white),
+        errorScale: _radixColorSteps(brightness, false, _RadixBaseColor.red),
+        errorExtra: RadixScaleExtra(foregroundText: Colors.white),
+      );
     // mauve + slate + sage
     case RadixThemeColor.grim:
       radixScheme = RadixScheme(
-          primaryScale:
-              _radixGraySteps(brightness, false, _RadixBaseColor.tomato),
-          primaryAlphaScale:
-              _radixColorSteps(brightness, true, _RadixBaseColor.tomato),
-          secondaryScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.indigo),
-          tertiaryScale:
-              _radixColorSteps(brightness, false, _RadixBaseColor.teal),
-          grayScale: brightness == Brightness.dark
-              ? RadixColors.dark.gray
-              : RadixColors.gray,
-          errorScale: _radixColorSteps(brightness, false, _RadixBaseColor.red));
+        primaryScale:
+            _radixGraySteps(brightness, false, _RadixBaseColor.tomato),
+        primaryExtra: RadixScaleExtra(foregroundText: Colors.white),
+        primaryAlphaScale:
+            _radixGraySteps(brightness, true, _RadixBaseColor.tomato),
+        primaryAlphaExtra: RadixScaleExtra(foregroundText: Colors.white),
+        secondaryScale:
+            _radixColorSteps(brightness, false, _RadixBaseColor.purple),
+        secondaryExtra: RadixScaleExtra(foregroundText: Colors.white),
+        tertiaryScale:
+            _radixColorSteps(brightness, false, _RadixBaseColor.brown),
+        tertiaryExtra: RadixScaleExtra(foregroundText: Colors.white),
+        grayScale: brightness == Brightness.dark
+            ? RadixColors.dark.gray
+            : RadixColors.gray,
+        grayExtra: RadixScaleExtra(foregroundText: Colors.white),
+        errorScale: _radixColorSteps(brightness, false, _RadixBaseColor.red),
+        errorExtra: RadixScaleExtra(foregroundText: Colors.white),
+      );
   }
   return radixScheme;
 }
 
-ColorScheme _radixColorScheme(Brightness brightness, RadixScheme radix) =>
-    ColorScheme(
-      brightness: brightness,
-      primary: radix.primaryScale.step9,
-      onPrimary: radix.primaryScale.step12,
-      primaryContainer: radix.primaryScale.step4,
-      onPrimaryContainer: radix.primaryScale.step11,
-      secondary: radix.secondaryScale.step9,
-      onSecondary: radix.secondaryScale.step12,
-      secondaryContainer: radix.secondaryScale.step3,
-      onSecondaryContainer: radix.secondaryScale.step11,
-      tertiary: radix.tertiaryScale.step9,
-      onTertiary: radix.tertiaryScale.step12,
-      tertiaryContainer: radix.tertiaryScale.step3,
-      onTertiaryContainer: radix.tertiaryScale.step11,
-      error: radix.errorScale.step9,
-      onError: radix.errorScale.step12,
-      errorContainer: radix.errorScale.step3,
-      onErrorContainer: radix.errorScale.step11,
-      background: radix.grayScale.step1,
-      onBackground: radix.grayScale.step11,
-      surface: radix.primaryScale.step1,
-      onSurface: radix.primaryScale.step12,
-      surfaceVariant: radix.secondaryScale.step2,
-      onSurfaceVariant: radix.secondaryScale.step11,
-      outline: radix.primaryScale.step7,
-      outlineVariant: radix.primaryScale.step6,
-      shadow: RadixColors.dark.gray.step1,
-      scrim: radix.primaryScale.step9,
-      inverseSurface: radix.primaryScale.step11,
-      onInverseSurface: radix.primaryScale.step2,
-      inversePrimary: radix.primaryScale.step10,
-      surfaceTint: radix.primaryAlphaScale.step4,
-    );
-
-ChatTheme makeChatTheme(ScaleScheme scale, TextTheme textTheme) =>
-    DefaultChatTheme(
-      primaryColor: scale.primaryScale.background,
-      secondaryColor: scale.secondaryScale.background,
-      backgroundColor: scale.grayScale.subtleBackground,
-      inputBackgroundColor: Colors.blue,
-      inputBorderRadius: BorderRadius.zero,
-      inputTextDecoration: InputDecoration(
-        filled: true,
-        fillColor: scale.primaryScale.elementBackground,
-        isDense: true,
-        contentPadding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
-        border: const OutlineInputBorder(
-            borderSide: BorderSide.none,
-            borderRadius: BorderRadius.all(Radius.circular(16))),
-      ),
-      inputContainerDecoration: BoxDecoration(color: scale.primaryScale.border),
-      inputPadding: const EdgeInsets.all(9),
-      inputTextColor: scale.primaryScale.text,
-      attachmentButtonIcon: const Icon(Icons.attach_file),
-    );
+TextTheme makeRadixTextTheme(Brightness brightness) {
+  late final TextTheme textTheme;
+  if (Platform.isIOS) {
+    textTheme = (brightness == Brightness.light)
+        ? Typography.blackCupertino
+        : Typography.whiteCupertino;
+  } else if (Platform.isMacOS) {
+    textTheme = (brightness == Brightness.light)
+        ? Typography.blackRedwoodCity
+        : Typography.whiteRedwoodCity;
+  } else if (Platform.isAndroid || Platform.isFuchsia) {
+    textTheme = (brightness == Brightness.light)
+        ? Typography.blackMountainView
+        : Typography.whiteMountainView;
+  } else if (Platform.isLinux) {
+    textTheme = (brightness == Brightness.light)
+        ? Typography.blackHelsinki
+        : Typography.whiteHelsinki;
+  } else if (Platform.isWindows) {
+    textTheme = (brightness == Brightness.light)
+        ? Typography.blackRedmond
+        : Typography.whiteRedmond;
+  } else {
+    log.warning('unknown platform');
+    textTheme = (brightness == Brightness.light)
+        ? Typography.blackHelsinki
+        : Typography.whiteHelsinki;
+  }
+  return textTheme;
+}
 
 ThemeData radixGenerator(Brightness brightness, RadixThemeColor themeColor) {
-  final textTheme = (brightness == Brightness.light)
-      ? Typography.blackCupertino
-      : Typography.whiteCupertino;
+  final textTheme = makeRadixTextTheme(brightness);
   final radix = _radixScheme(brightness, themeColor);
-  final colorScheme = _radixColorScheme(brightness, radix);
   final scaleScheme = radix.toScale();
+  final colorScheme = scaleScheme.toColorScheme(brightness);
+  final scaleConfig = ScaleConfig(useVisualIndicators: false);
 
   final themeData = ThemeData.from(
       colorScheme: colorScheme, textTheme: textTheme, useMaterial3: true);
@@ -544,9 +612,27 @@ ThemeData radixGenerator(Brightness brightness, RadixThemeColor themeColor) {
       bottomSheetTheme: themeData.bottomSheetTheme.copyWith(
           elevation: 0,
           modalElevation: 0,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-      extensions: <ThemeExtension<dynamic>>[
-        scaleScheme,
-      ]);
+          shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16)))),
+      canvasColor: scaleScheme.primaryScale.subtleBackground,
+      chipTheme: themeData.chipTheme.copyWith(
+          backgroundColor: scaleScheme.primaryScale.elementBackground,
+          selectedColor: scaleScheme.primaryScale.activeElementBackground,
+          surfaceTintColor: scaleScheme.primaryScale.hoverElementBackground,
+          checkmarkColor: scaleScheme.primaryScale.primary,
+          side: BorderSide(color: scaleScheme.primaryScale.border)),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+            backgroundColor: scaleScheme.primaryScale.elementBackground,
+            foregroundColor: scaleScheme.primaryScale.primary,
+            disabledBackgroundColor: scaleScheme.grayScale.elementBackground,
+            disabledForegroundColor: scaleScheme.grayScale.primary,
+            shape: RoundedRectangleBorder(
+                side: BorderSide(color: scaleScheme.primaryScale.border),
+                borderRadius: BorderRadius.circular(8))),
+      ),
+      inputDecorationTheme: ScaleInputDecoratorTheme(scaleScheme, textTheme),
+      extensions: <ThemeExtension<dynamic>>[scaleScheme, scaleConfig]);
 }

@@ -133,7 +133,7 @@ class RootLoggy implements LoggyType {
   Loggy<RootLoggy> get loggy => Loggy<RootLoggy>('');
 }
 
-Loggy get log => Loggy<RootLoggy>('Ally');
+Loggy get log => Loggy<RootLoggy>('veilidchat');
 
 void initLoggy() {
   Loggy.initLoggy(

@@ -18,7 +18,7 @@ class EnterPinDialog extends StatefulWidget {
   final String? description;
 
   @override
-  EnterPinDialogState createState() => EnterPinDialogState();
+  State<EnterPinDialog> createState() => _EnterPinDialogState();
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
@@ -29,7 +29,7 @@ class EnterPinDialog extends StatefulWidget {
   }
 }
 
-class EnterPinDialogState extends State<EnterPinDialog> {
+class _EnterPinDialogState extends State<EnterPinDialog> {
   final pinController = TextEditingController();
   final focusNode = FocusNode();
   final formKey = GlobalKey<FormState>();
@@ -58,7 +58,7 @@ class EnterPinDialogState extends State<EnterPinDialog> {
     final defaultPinTheme = PinTheme(
       width: 56,
       height: 60,
-      textStyle: TextStyle(fontSize: 22, color: scale.primaryScale.text),
+      textStyle: TextStyle(fontSize: 22, color: scale.primaryScale.appText),
       decoration: BoxDecoration(
         color: fillColor,
         borderRadius: BorderRadius.circular(8),
@@ -67,20 +67,16 @@ class EnterPinDialogState extends State<EnterPinDialog> {
     );
 
     /// Optionally you can use form to validate the Pinput
-    return Dialog(
-        backgroundColor: scale.grayScale.subtleBackground,
+    return StyledDialog(
+        title: !widget.reenter
+            ? translate('enter_pin_dialog.enter_pin')
+            : translate('enter_pin_dialog.reenter_pin'),
         child: Form(
           key: formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                !widget.reenter
-                    ? translate('enter_pin_dialog.enter_pin')
-                    : translate('enter_pin_dialog.reenter_pin'),
-                style: theme.textTheme.titleLarge,
-              ).paddingAll(16),
               Directionality(
                 // Specify direction if desired
                 textDirection: TextDirection.ltr,

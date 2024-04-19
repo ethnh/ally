@@ -8,12 +8,8 @@ import '../repository/account_repository/account_repository.dart';
 class ActiveLocalAccountCubit extends Cubit<TypedKey?> {
   ActiveLocalAccountCubit(AccountRepository accountRepository)
       : _accountRepository = accountRepository,
-        super(null) {
+        super(accountRepository.getActiveLocalAccount()) {
     // Subscribe to streams
-    _initAccountRepositorySubscription();
-  }
-
-  void _initAccountRepositorySubscription() {
     _accountRepositorySubscription = _accountRepository.stream.listen((change) {
       switch (change) {
         case AccountRepositoryChange.activeLocalAccount:

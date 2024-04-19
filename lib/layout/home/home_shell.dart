@@ -10,17 +10,15 @@ import 'home_account_missing.dart';
 import 'home_no_active.dart';
 
 class HomeShell extends StatefulWidget {
-  const HomeShell({required this.child, super.key});
+  const HomeShell({required this.accountReadyBuilder, super.key});
 
   @override
   HomeShellState createState() => HomeShellState();
 
-  final Widget child;
+  final Builder accountReadyBuilder;
 }
 
 class HomeShellState extends State<HomeShell> {
-  final _unfocusNode = FocusNode();
-
   @override
   void initState() {
     super.initState();
@@ -28,11 +26,10 @@ class HomeShellState extends State<HomeShell> {
 
   @override
   void dispose() {
-    _unfocusNode.dispose();
     super.dispose();
   }
 
-  Widget buildWithLogin(BuildContext context, Widget child) {
+  Widget buildWithLogin(BuildContext context) {
     final activeLocalAccount = context.watch<ActiveLocalAccountCubit>().state;
 
     if (activeLocalAccount == null) {
@@ -55,8 +52,10 @@ class HomeShellState extends State<HomeShell> {
             value: accountInfo.activeAccountInfo!,
             child: BlocProvider(
                 create: (context) => AccountRecordCubit(
-                    record: accountInfo.activeAccountInfo!.accountRecord),
-                child: child));
+                    open: () async => AccountRepository.instance
+                        .openAccountRecord(
+                            accountInfo.activeAccountInfo!.userLogin)),
+                child: widget.accountReadyBuilder));
     }
   }
 
@@ -67,11 +66,9 @@ class HomeShellState extends State<HomeShell> {
 
     // XXX: eventually write account switcher here
     return SafeArea(
-        child: GestureDetector(
-            onTap: () => FocusScope.of(context).requestFocus(_unfocusNode),
-            child: DecoratedBox(
-                decoration: BoxDecoration(
-                    color: scale.primaryScale.activeElementBackground),
-                child: buildWithLogin(context, widget.child))));
+        child: DecoratedBox(
+            decoration: BoxDecoration(
+                color: scale.primaryScale.activeElementBackground),
+            child: buildWithLogin(context)));
   }
 }

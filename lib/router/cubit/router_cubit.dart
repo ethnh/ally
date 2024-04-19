@@ -3,40 +3,39 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stream_transform/stream_transform.dart';
-import '../../myweb/index.dart';2
+
 import '../../../account_manager/account_manager.dart';
-import '../../init.dart';
 import '../../layout/layout.dart';
 import '../../settings/settings.dart';
 import '../../tools/tools.dart';
 import '../../veilid_processor/views/developer.dart';
-import '../../graphview/graph_page.dart';
-import '../../apiglobalmapview/map.dart';
+
 part 'router_cubit.freezed.dart';
 part 'router_cubit.g.dart';
-part 'router_state.dart';
 
 final _rootNavKey = GlobalKey<NavigatorState>(debugLabel: 'rootNavKey');
 final _homeNavKey = GlobalKey<NavigatorState>(debugLabel: 'homeNavKey');
 
+@freezed
+class RouterState with _$RouterState {
+  const factory RouterState(
+      {required bool hasAnyAccount,
+      required bool hasActiveChat}) = _RouterState;
+
+  factory RouterState.fromJson(dynamic json) =>
+      _$RouterStateFromJson(json as Map<String, dynamic>);
+}
+
 class RouterCubit extends Cubit<RouterState> {
   RouterCubit(AccountRepository accountRepository)
-      : super(const RouterState(
-          isInitialized: false,
-          hasAnyAccount: false,
+      : super(RouterState(
+          hasAnyAccount: accountRepository.getLocalAccounts().isNotEmpty,
           hasActiveChat: false,
         )) {
-    // Watch for changes that the router will care about
-    Future.delayed(Duration.zero, () async {
-      await eventualInitialized.future;
-      emit(state.copyWith(
-          isInitialized: true,
-          hasAnyAccount: accountRepository.getLocalAccounts().isNotEmpty));
-    });
-
     // Subscribe to repository streams
     _accountRepositorySubscription = accountRepository.stream.listen((event) {
       switch (event) {
@@ -63,33 +62,19 @@ class RouterCubit extends Cubit<RouterState> {
 
   /// Our application routes
   List<RouteBase> get routes => [
-        GoRoute(
-          path: '/',
-          builder: (context, state) => const IndexPage(),
-        ),
-        GoRoute(
-          path: '/myweb',
-          builder: (context, state) => const MyWebIndexPage(),
-        ),
-        GoRoute(
-          path: '/graph',
-          builder: (context, state) => const GraphExamplePage(),
-        ),
-        GoRoute(
-          path: '/worldcities',
-          builder: (context, state) => const InteractiveCityMapPage(),
-        ),
         ShellRoute(
           navigatorKey: _homeNavKey,
-          builder: (context, state, child) =>
-              HomeShell(child: HomeAccountReadyShell(child: child)),
+          builder: (context, state, child) => HomeShell(
+              accountReadyBuilder: Builder(
+                  builder: (context) =>
+                      HomeAccountReadyShell(context: context, child: child))),
           routes: [
             GoRoute(
-              path: '/home',
+              path: '/',
               builder: (context, state) => const HomeAccountReadyMain(),
             ),
             GoRoute(
-              path: '/home/chat',
+              path: '/chat',
               builder: (context, state) => const HomeAccountReadyChat(),
             ),
           ],
@@ -111,19 +96,11 @@ class RouterCubit extends Cubit<RouterState> {
   /// Redirects when our state changes
   String? redirect(BuildContext context, GoRouterState goRouterState) {
     // No matter where we are, if there's not
-    return '/cms';
+
     switch (goRouterState.matchedLocation) {
-      case '/':
-
-        // Wait for initialization to complete
-        if (!eventualInitialized.isCompleted) {
-          return null;
-        }
-
-        return state.hasAnyAccount ? '/home' : '/worldcities';
       case '/new_account':
-        return state.hasAnyAccount ? '/home' : null;
-      case '/home':
+        return state.hasAnyAccount ? '/' : null;
+      case '/':
         if (!state.hasAnyAccount) {
           return '/new_account';
         }
@@ -133,11 +110,11 @@ class RouterCubit extends Cubit<RouterState> {
             tabletLandscape: false,
             desktop: false)) {
           if (state.hasActiveChat) {
-            return '/home/chat';
+            return '/chat';
           }
         }
         return null;
-      case '/home/chat':
+      case '/chat':
         if (!state.hasAnyAccount) {
           return '/new_account';
         }
@@ -147,10 +124,10 @@ class RouterCubit extends Cubit<RouterState> {
             tabletLandscape: false,
             desktop: false)) {
           if (!state.hasActiveChat) {
-            return '/home';
+            return '/';
           }
         } else {
-          return '/home';
+          return '/';
         }
         return null;
       case '/settings':

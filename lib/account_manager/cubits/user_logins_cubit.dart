@@ -9,12 +9,8 @@ import '../repository/account_repository/account_repository.dart';
 class UserLoginsCubit extends Cubit<IList<UserLogin>> {
   UserLoginsCubit(AccountRepository accountRepository)
       : _accountRepository = accountRepository,
-        super(IList<UserLogin>()) {
+        super(accountRepository.getUserLogins()) {
     // Subscribe to streams
-    _initAccountRepositorySubscription();
-  }
-
-  void _initAccountRepositorySubscription() {
     _accountRepositorySubscription = _accountRepository.stream.listen((change) {
       switch (change) {
         case AccountRepositoryChange.userLogins:

@@ -17,7 +17,7 @@ class EnterPasswordDialog extends StatefulWidget {
   final String? description;
 
   @override
-  EnterPasswordDialogState createState() => EnterPasswordDialogState();
+  State<EnterPasswordDialog> createState() => _EnterPasswordDialogState();
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
@@ -28,7 +28,7 @@ class EnterPasswordDialog extends StatefulWidget {
   }
 }
 
-class EnterPasswordDialogState extends State<EnterPasswordDialog> {
+class _EnterPasswordDialogState extends State<EnterPasswordDialog> {
   final passwordController = TextEditingController();
   final focusNode = FocusNode();
   final formKey = GlobalKey<FormState>();
@@ -52,27 +52,23 @@ class EnterPasswordDialogState extends State<EnterPasswordDialog> {
     final theme = Theme.of(context);
     final scale = theme.extension<ScaleScheme>()!;
 
-    return Dialog(
-        backgroundColor: scale.grayScale.subtleBackground,
+    return StyledDialog(
+        title: widget.matchPass == null
+            ? translate('enter_password_dialog.enter_password')
+            : translate('enter_password_dialog.reenter_password'),
         child: Form(
           key: formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                widget.matchPass == null
-                    ? translate('enter_password_dialog.enter_password')
-                    : translate('enter_password_dialog.reenter_password'),
-                style: theme.textTheme.titleLarge,
-              ).paddingAll(16),
               TextField(
                   controller: passwordController,
                   focusNode: focusNode,
                   autofocus: true,
                   enableSuggestions: false,
-                  obscureText:
-                      !_passwordVisible, //This will obscure text dynamically
+                  obscureText: !_passwordVisible,
+                  obscuringCharacter: '*',
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.singleLineFormatter
                   ],
@@ -87,14 +83,14 @@ class EnterPasswordDialogState extends State<EnterPasswordDialog> {
                         ? null
                         : Icon(Icons.check_circle,
                             color: passwordController.text == widget.matchPass
-                                ? scale.primaryScale.background
+                                ? scale.primaryScale.primary
                                 : scale.grayScale.subtleBackground),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _passwordVisible
                             ? Icons.visibility
                             : Icons.visibility_off,
-                        color: scale.primaryScale.text,
+                        color: scale.primaryScale.appText,
                       ),
                       onPressed: () {
                         setState(() {

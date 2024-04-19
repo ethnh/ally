@@ -1,11 +1,11 @@
 {
-    "name": "Ally",
-    "short_name": "Ally",
+    "name": "veilidchat",
+    "short_name": "veilidchat",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#33183f",
     "theme_color": "#863fa6",
-    "description": "Ally",
+    "description": "VeilidChat",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

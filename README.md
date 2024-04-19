@@ -1,19 +1,13 @@
-# Ally
+# VeilidChat
 
-Ally is a contact networking, group-oriented document sharing (in the style of blogging) application written for the Veilid (https://www.veilid.com) distributed application platform. 
+VeilidChat is a chat application written for the Veilid (https://www.veilid.com) distributed application platform. It has a familiar and simple interface and is designed for private, and secure person-to-person communications.
 
-## Developers
-Contributions welcome!
-
-## Ally
-
-This application is based on Ally. This work is copyleft
-
-For more information about Ally: https://veilid.chat
+For more information about VeilidChat: https://veilid.com/chat/
 
 For more information about the Veilid network protocol and app development platform: https://veilid.com
 
 ## Setup
+
 While this is still in development, you must have a clone of the Veilid source checked out at `../veilid` relative to the working directory of this repository.
 
 ### For Linux Systems:

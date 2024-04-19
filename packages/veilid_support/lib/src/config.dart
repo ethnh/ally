@@ -1,37 +1,62 @@
+import 'dart:io' show Platform;
+
 import 'package:veilid/veilid.dart';
 
 Map<String, dynamic> getDefaultVeilidPlatformConfig(
     bool isWeb, String appName) {
+  final ignoreLogTargetsStr =
+      // ignore: do_not_use_environment
+      const String.fromEnvironment('IGNORE_LOG_TARGETS').trim();
+  final ignoreLogTargets = ignoreLogTargetsStr.isEmpty
+      ? <String>[]
+      : ignoreLogTargetsStr.split(',').map((e) => e.trim()).toList();
+
   if (isWeb) {
-    return const VeilidWASMConfig(
+    return VeilidWASMConfig(
             logging: VeilidWASMConfigLogging(
                 performance: VeilidWASMConfigLoggingPerformance(
                     enabled: true,
                     level: VeilidConfigLogLevel.debug,
                     logsInTimings: true,
-                    logsInConsole: false),
+                    logsInConsole: false,
+                    ignoreLogTargets: ignoreLogTargets),
                 api: VeilidWASMConfigLoggingApi(
-                    enabled: true, level: VeilidConfigLogLevel.info)))
+                    enabled: true,
+                    level: VeilidConfigLogLevel.info,
+                    ignoreLogTargets: ignoreLogTargets)))
         .toJson();
   }
   return VeilidFFIConfig(
           logging: VeilidFFIConfigLogging(
-              terminal: const VeilidFFIConfigLoggingTerminal(
-                enabled: false,
-                level: VeilidConfigLogLevel.debug,
-              ),
+              terminal: VeilidFFIConfigLoggingTerminal(
+                  enabled: false,
+                  level: VeilidConfigLogLevel.debug,
+                  ignoreLogTargets: ignoreLogTargets),
               otlp: VeilidFFIConfigLoggingOtlp(
                   enabled: false,
                   level: VeilidConfigLogLevel.trace,
                   grpcEndpoint: '127.0.0.1:4317',
-                  serviceName: appName),
-              api: const VeilidFFIConfigLoggingApi(
-                  enabled: true, level: VeilidConfigLogLevel.info)))
+                  serviceName: appName,
+                  ignoreLogTargets: ignoreLogTargets),
+              api: VeilidFFIConfigLoggingApi(
+                  enabled: true,
+                  level: VeilidConfigLogLevel.info,
+                  ignoreLogTargets: ignoreLogTargets)))
       .toJson();
 }
 
-Future<VeilidConfig> getVeilidConfig(bool isWeb, String appName) async {
-  var config = await getDefaultVeilidConfig(appName);
+Future<VeilidConfig> getVeilidConfig(bool isWeb, String programName) async {
+  var config = await getDefaultVeilidConfig(
+    isWeb: isWeb,
+    programName: programName,
+    // ignore: avoid_redundant_argument_values, do_not_use_environment
+    namespace: const String.fromEnvironment('NAMESPACE'),
+    // ignore: avoid_redundant_argument_values, do_not_use_environment
+    bootstrap: const String.fromEnvironment('BOOTSTRAP'),
+    // ignore: avoid_redundant_argument_values, do_not_use_environment
+    networkKeyPassword: const String.fromEnvironment('NETWORK_KEY'),
+  );
+
   // ignore: do_not_use_environment
   if (const String.fromEnvironment('DELETE_TABLE_STORE') == '1') {
     config =
@@ -60,35 +85,12 @@ Future<VeilidConfig> getVeilidConfig(bool isWeb, String appName) async {
                 config.network.routingTable.copyWith(bootstrap: bootstrap)));
   }
 
-  // ignore: do_not_use_environment
-  const envNetworkKey = String.fromEnvironment('NETWORK_KEY');
-  if (envNetworkKey.isNotEmpty) {
-    config = config.copyWith(
-        network: config.network.copyWith(networkKeyPassword: envNetworkKey));
-  }
-
-  // ignore: do_not_use_environment
-  const envBootstrap = String.fromEnvironment('BOOTSTRAP');
-  if (envBootstrap.isNotEmpty) {
-    final bootstrap = envBootstrap.split(',').map((e) => e.trim()).toList();
-    config = config.copyWith(
-        network: config.network.copyWith(
-            routingTable:
-                config.network.routingTable.copyWith(bootstrap: bootstrap)));
-  }
-
   return config.copyWith(
     capabilities:
         // XXX: Remove DHTV and DHTW when we get background sync implemented
         const VeilidConfigCapabilities(disable: ['DHTV', 'DHTW', 'TUNL']),
-    protectedStore: config.protectedStore.copyWith(allowInsecureFallback: true),
-    // network: config.network.copyWith(
-    //         dht: config.network.dht.copyWith(
-    //             getValueCount: 3,
-    //             getValueFanout: 8,
-    //             getValueTimeoutMs: 5000,
-    //             setValueCount: 4,
-    //             setValueFanout: 10,
-    //             setValueTimeoutMs: 5000))
+    protectedStore:
+        // XXX: Linux often does not have a secret storage mechanism installed
+        config.protectedStore.copyWith(allowInsecureFallback: Platform.isLinux),
   );
 }

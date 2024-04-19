@@ -1,8 +1,5 @@
-import 'dart:async';
-
 import 'package:async_tools/async_tools.dart';
 import 'package:awesome_extensions/awesome_extensions.dart';
-import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
@@ -14,26 +11,25 @@ import '../../chat_list/chat_list.dart';
 import '../../contacts/contacts.dart';
 import '../../proto/proto.dart' as proto;
 import '../../theme/theme.dart';
-import '../../tools/tools.dart';
 import '../chat.dart';
 
 class ChatComponent extends StatelessWidget {
   const ChatComponent._(
       {required TypedKey localUserIdentityKey,
-      required TypedKey remoteConversationRecordKey,
-      required IList<proto.Message> messages,
+      required SingleContactMessagesCubit messagesCubit,
+      required SingleContactMessagesState messagesState,
       required types.User localUser,
       required types.User remoteUser,
       super.key})
       : _localUserIdentityKey = localUserIdentityKey,
-        _remoteConversationRecordKey = remoteConversationRecordKey,
-        _messages = messages,
+        _messagesCubit = messagesCubit,
+        _messagesState = messagesState,
         _localUser = localUser,
         _remoteUser = remoteUser;
 
   final TypedKey _localUserIdentityKey;
-  final TypedKey _remoteConversationRecordKey;
-  final IList<proto.Message> _messages;
+  final SingleContactMessagesCubit _messagesCubit;
+  final SingleContactMessagesState _messagesState;
   final types.User _localUser;
   final types.User _remoteUser;
 
@@ -44,21 +40,22 @@ class ChatComponent extends StatelessWidget {
         // Get all watched dependendies
         final activeAccountInfo = context.watch<ActiveAccountInfo>();
         final accountRecordInfo =
-            context.watch<AccountRecordCubit>().state.data?.value;
+            context.watch<AccountRecordCubit>().state.asData?.value;
         if (accountRecordInfo == null) {
           return debugPage('should always have an account record here');
         }
-        final contactList = context.watch<ContactListCubit>().state.data?.value;
+        final contactList =
+            context.watch<ContactListCubit>().state.state.asData?.value;
         if (contactList == null) {
           return debugPage('should always have a contact list here');
         }
-        final avconversation = context.select<ActiveConversationsCubit,
+        final avconversation = context.select<ActiveConversationsBlocMapCubit,
                 AsyncValue<ActiveConversationState>?>(
             (x) => x.state[remoteConversationRecordKey]);
         if (avconversation == null) {
-          return debugPage('should always have an active conversation here');
+          return waitingPage();
         }
-        final conversation = avconversation.data?.value;
+        final conversation = avconversation.asData?.value;
         if (conversation == null) {
           return avconversation.buildNotData();
         }
@@ -77,23 +74,22 @@ class ChatComponent extends StatelessWidget {
             id: conversation.contact.identityPublicKey.toVeilid().toString(),
             firstName: editedName);
 
+        // Get the messages cubit
+        final messages = context.select<ActiveSingleContactChatBlocMapCubit,
+                (SingleContactMessagesCubit, SingleContactMessagesState)?>(
+            (x) => x.tryOperate(remoteConversationRecordKey,
+                closure: (cubit) => (cubit, cubit.state)));
+
         // Get the messages to display
         // and ensure it is safe to operate() on the MessageCubit for this chat
-        final avmessages = context.select<ActiveConversationMessagesCubit,
-                AsyncValue<IList<proto.Message>>?>(
-            (x) => x.state[remoteConversationRecordKey]);
-        if (avmessages == null) {
-          return waitingPage();
-        }
-        final messages = avmessages.data?.value;
         if (messages == null) {
-          return avmessages.buildNotData();
+          return waitingPage();
         }
 
         return ChatComponent._(
             localUserIdentityKey: localUserIdentityKey,
-            remoteConversationRecordKey: remoteConversationRecordKey,
-            messages: messages,
+            messagesCubit: messages.$1,
+            messagesState: messages.$2,
             localUser: localUser,
             remoteUser: remoteUser,
             key: key);
@@ -101,41 +97,52 @@ class ChatComponent extends StatelessWidget {
 
   /////////////////////////////////////////////////////////////////////
 
-  types.Message messageToChatMessage(proto.Message message) {
-    final isLocal = message.author == _localUserIdentityKey.toProto();
+  types.Message messageToChatMessage(MessageState message) {
+    final isLocal = message.author == _localUserIdentityKey;
+
+    types.Status? status;
+    if (message.sendState != null) {
+      assert(isLocal, 'send state should only be on sent messages');
+      switch (message.sendState!) {
+        case MessageSendState.sending:
+          status = types.Status.sending;
+        case MessageSendState.sent:
+          status = types.Status.sent;
+        case MessageSendState.delivered:
+          status = types.Status.delivered;
+      }
+    }
 
     final textMessage = types.TextMessage(
-      author: isLocal ? _localUser : _remoteUser,
-      createdAt: (message.timestamp ~/ 1000).toInt(),
-      id: message.timestamp.toString(),
-      text: message.text,
-    );
+        author: isLocal ? _localUser : _remoteUser,
+        createdAt: (message.timestamp.value ~/ BigInt.from(1000)).toInt(),
+        id: message.timestamp.toString(),
+        text: message.text,
+        showStatus: status != null,
+        status: status);
     return textMessage;
   }
 
-  Future<void> _addMessage(BuildContext context, proto.Message message) async {
+  void _addMessage(proto.Message message) {
     if (message.text.isEmpty) {
       return;
     }
-    await context.read<ActiveConversationMessagesCubit>().operate(
-        _remoteConversationRecordKey,
-        closure: (messagesCubit) => messagesCubit.addMessage(message: message));
+    _messagesCubit.addMessage(message: message);
   }
 
-  Future<void> _handleSendPressed(
-      BuildContext context, types.PartialText message) async {
+  void _handleSendPressed(types.PartialText message) {
     final protoMessage = proto.Message()
       ..author = _localUserIdentityKey.toProto()
       ..timestamp = Veilid.instance.now().toInt64()
       ..text = message.text;
     //..signature = signature;
 
-    await _addMessage(context, protoMessage);
+    _addMessage(protoMessage);
   }
 
-  Future<void> _handleAttachmentPressed() async {
-    //
-  }
+  // void _handleAttachmentPressed() async {
+  //   //
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -144,9 +151,14 @@ class ChatComponent extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final chatTheme = makeChatTheme(scale, textTheme);
 
+    final messages = _messagesState.asData?.value;
+    if (messages == null) {
+      return _messagesState.buildNotData();
+    }
+
     // Convert protobuf messages to chat messages
     final chatMessages = <types.Message>[];
-    for (final message in _messages) {
+    for (final message in messages) {
       final chatMessage = messageToChatMessage(message);
       chatMessages.insert(0, chatMessage);
     }
@@ -172,11 +184,13 @@ class ChatComponent extends StatelessWidget {
                                 16, 0, 16, 0),
                             child: Text(_remoteUser.firstName!,
                                 textAlign: TextAlign.start,
-                                style: textTheme.titleMedium),
+                                style: textTheme.titleMedium!.copyWith(
+                                    color: scale.primaryScale.borderText)),
                           )),
                       const Spacer(),
                       IconButton(
-                          icon: const Icon(Icons.close),
+                          icon: Icon(Icons.close,
+                              color: scale.primaryScale.borderText),
                           onPressed: () async {
                             context.read<ActiveChatCubit>().setActiveChat(null);
                           }).paddingLTRB(16, 0, 16, 0)
@@ -187,14 +201,13 @@ class ChatComponent extends StatelessWidget {
                       decoration: const BoxDecoration(),
                       child: Chat(
                         theme: chatTheme,
+                        // emojiEnlargementBehavior:
+                        //     EmojiEnlargementBehavior.multi,
                         messages: chatMessages,
                         //onAttachmentPressed: _handleAttachmentPressed,
                         //onMessageTap: _handleMessageTap,
                         //onPreviewDataFetched: _handlePreviewDataFetched,
-                        onSendPressed: (message) {
-                          singleFuture(this,
-                              () async => _handleSendPressed(context, message));
-                        },
+                        onSendPressed: _handleSendPressed,
                         //showUserAvatars: false,
                         //showUserNames: true,
                         user: _localUser,

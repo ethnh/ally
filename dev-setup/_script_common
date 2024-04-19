@@ -12,5 +12,5 @@ if [ ! -d "$VEILIDDIR" ]; then
     exit 1
 fi
 
-# Ally location
-AllyDIR=$(get_abs_filename "$SCRIPTDIR/../../veilid")
+# VeilidChat location
+VEILIDCHATDIR=$(get_abs_filename "$SCRIPTDIR/../../veilid")

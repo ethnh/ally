@@ -32,11 +32,14 @@ class ValidContactInvitation {
     final pool = DHTRecordPool.instance;
     try {
       // Ensure we don't delete this if we're trying to chat to self
+      // The initiating side will delete the records in deleteInvitation()
       final isSelf = _contactIdentityMaster.identityPublicKey ==
           _activeAccountInfo.localAccount.identityMaster.identityPublicKey;
       final accountRecordKey = _activeAccountInfo.accountRecordKey;
 
       return (await pool.openWrite(_contactRequestInboxKey, _writer,
+              debugName: 'ValidContactInvitation::accept::'
+                  'ContactRequestInbox',
               parent: accountRecordKey))
           // ignore: prefer_expression_function_bodies
           .maybeDeleteScope(!isSelf, (contactRequestInbox) async {
@@ -70,13 +73,9 @@ class ValidContactInvitation {
                 ..identitySignature = identitySignature.toProto();
 
               // Write the acceptance to the inbox
-              if (await contactRequestInbox.tryWriteProtobuf(
-                      proto.SignedContactResponse.fromBuffer,
-                      signedContactResponse,
-                      subkey: 1) !=
-                  null) {
-                throw Exception('failed to accept contact invitation');
-              }
+              await contactRequestInbox
+                  .eventualWriteProtobuf(signedContactResponse, subkey: 1);
+
               return AcceptedContact(
                 remoteProfile: _contactRequestPrivate.profile,
                 remoteIdentity: _contactIdentityMaster,
@@ -102,6 +101,8 @@ class ValidContactInvitation {
         _activeAccountInfo.userLogin.accountRecordInfo.accountRecord.recordKey;
 
     return (await pool.openWrite(_contactRequestInboxKey, _writer,
+            debugName: 'ValidContactInvitation::reject::'
+                'ContactRequestInbox',
             parent: accountRecordKey))
         .maybeDeleteScope(!isSelf, (contactRequestInbox) async {
       final cs =
@@ -124,13 +125,8 @@ class ValidContactInvitation {
         ..identitySignature = identitySignature.toProto();
 
       // Write the rejection to the inbox
-      if (await contactRequestInbox.tryWriteProtobuf(
-              proto.SignedContactResponse.fromBuffer, signedContactResponse,
-              subkey: 1) !=
-          null) {
-        log.error('failed to reject contact invitation');
-        return false;
-      }
+      await contactRequestInbox.eventualWriteProtobuf(signedContactResponse,
+          subkey: 1);
       return true;
     });
   }

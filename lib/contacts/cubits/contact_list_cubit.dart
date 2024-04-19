@@ -6,6 +6,7 @@ import 'package:veilid_support/veilid_support.dart';
 import '../../account_manager/account_manager.dart';
 import '../../proto/proto.dart' as proto;
 import '../../tools/tools.dart';
+import 'conversation_cubit.dart';
 
 //////////////////////////////////////////////////
 // Mutable state for per-account contacts
@@ -27,6 +28,7 @@ class ContactListCubit extends DHTShortArrayCubit<proto.Contact> {
     final contactListRecordKey = account.contactList.toVeilid();
 
     final dhtRecord = await DHTShortArray.openOwned(contactListRecordKey,
+        debugName: 'ContactListCubit::_open::ContactList',
         parent: accountRecordKey);
 
     return dhtRecord;
@@ -53,50 +55,55 @@ class ContactListCubit extends DHTShortArrayCubit<proto.Contact> {
 
     // Add Contact to account's list
     // if this fails, don't keep retrying, user can try again later
-    if (await shortArray.tryAddItem(contact.writeToBuffer()) == false) {
-      throw Exception('Failed to add contact record');
-    }
+    await operateWrite((writer) async {
+      if (!await writer.tryAddItem(contact.writeToBuffer())) {
+        throw Exception('Failed to add contact record');
+      }
+    });
   }
 
   Future<void> deleteContact({required proto.Contact contact}) async {
-    final pool = DHTRecordPool.instance;
-    final accountRecordKey =
-        _activeAccountInfo.userLogin.accountRecordInfo.accountRecord.recordKey;
-    final localConversationKey = contact.localConversationRecordKey.toVeilid();
-    final remoteConversationKey =
+    final remoteIdentityPublicKey = contact.identityPublicKey.toVeilid();
+    final localConversationRecordKey =
+        contact.localConversationRecordKey.toVeilid();
+    final remoteConversationRecordKey =
         contact.remoteConversationRecordKey.toVeilid();
 
     // Remove Contact from account's list
-    for (var i = 0; i < shortArray.length; i++) {
-      final item =
-          await shortArray.getItemProtobuf(proto.Contact.fromBuffer, i);
-      if (item == null) {
-        throw Exception('Failed to get contact');
+    final (deletedItem, success) = await operateWrite((writer) async {
+      for (var i = 0; i < writer.length; i++) {
+        final item = await writer.getItemProtobuf(proto.Contact.fromBuffer, i);
+        if (item == null) {
+          throw Exception('Failed to get contact');
+        }
+        if (item.remoteConversationRecordKey ==
+            contact.remoteConversationRecordKey) {
+          if (await writer.tryRemoveItem(i) != null) {
+            return item;
+          }
+          return null;
+        }
       }
-      if (item.remoteConversationRecordKey ==
-          contact.remoteConversationRecordKey) {
-        await shortArray.tryRemoveItem(i);
-        break;
+      return null;
+    });
+
+    if (success && deletedItem != null) {
+      try {
+        // Make a conversation cubit to manipulate the conversation
+        final conversationCubit = ConversationCubit(
+          activeAccountInfo: _activeAccountInfo,
+          remoteIdentityPublicKey: remoteIdentityPublicKey,
+          localConversationRecordKey: localConversationRecordKey,
+          remoteConversationRecordKey: remoteConversationRecordKey,
+        );
+
+        // Delete the local and remote conversation records
+        await conversationCubit.delete();
+      } on Exception catch (e) {
+        log.debug('error deleting conversation records: $e', e);
       }
-    }
-    try {
-      await (await pool.openRead(localConversationKey,
-              parent: accountRecordKey))
-          .delete();
-    } on Exception catch (e) {
-      log.debug('error removing local conversation record key: $e', e);
-    }
-    try {
-      if (localConversationKey != remoteConversationKey) {
-        await (await pool.openRead(remoteConversationKey,
-                parent: accountRecordKey))
-            .delete();
-      }
-    } on Exception catch (e) {
-      log.debug('error removing remote conversation record key: $e', e);
     }
   }
 
-  //
   final ActiveAccountInfo _activeAccountInfo;
 }
