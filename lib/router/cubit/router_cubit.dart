@@ -6,7 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stream_transform/stream_transform.dart';
-
+import '../../myweb/index.dart';2
 import '../../../account_manager/account_manager.dart';
 import '../../init.dart';
 import '../../layout/layout.dart';
@@ -68,6 +68,10 @@ class RouterCubit extends Cubit<RouterState> {
           builder: (context, state) => const IndexPage(),
         ),
         GoRoute(
+          path: '/myweb',
+          builder: (context, state) => const MyWebIndexPage(),
+        ),
+        GoRoute(
           path: '/graph',
           builder: (context, state) => const GraphExamplePage(),
         ),
@@ -107,7 +111,7 @@ class RouterCubit extends Cubit<RouterState> {
   /// Redirects when our state changes
   String? redirect(BuildContext context, GoRouterState goRouterState) {
     // No matter where we are, if there's not
-    return '/worldcities';
+    return '/cms';
     switch (goRouterState.matchedLocation) {
       case '/':
 
