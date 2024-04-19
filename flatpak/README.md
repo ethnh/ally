@@ -18,7 +18,7 @@ for building the flatpak, as that is how an app is built for FlatHub.
 
 Important configuration files are as follows:
 
-- `com.veilid.veilidchat.yml` -- Flatpak manifest, contains the Flatpak
+- `com.veilid.ally.yml` -- Flatpak manifest, contains the Flatpak
   configuration and information on where to get the build files
 - `build-flatpak.sh` -- Shell script that will be called by the manifest to assemble the flatpak
 
@@ -34,7 +34,7 @@ like GitHub actions using the oldest supported Ubuntu LTS.**
 This is esentially what will happen when being built by FlatHub.
 
 ```bash
-flatpak-builder --force-clean build-dir com.veilid.veilidchat.yml --repo=repo
+flatpak-builder --force-clean build-dir com.veilid.ally.yml --repo=repo
 ```
 
 #### Publish to app store
@@ -56,23 +56,23 @@ the first step is needed to succeed in order to publish to FlatHub.*
 This part is not done when building for FlatHub.
 
 ```bash
-flatpak build-bundle repo com.veilid.veilidchat.flatpak com.veilid.veilidchat
+flatpak build-bundle repo com.veilid.ally.flatpak com.veilid.ally
 ```
 
 ### We now have a `.flatpak` file that we can install on any machine with
    Flatpak:
 
 ```bash
-flatpak install --user com.veilid.veilidchat.flatpak
+flatpak install --user com.veilid.ally.flatpak
 ```
 
 ### We can see that it is installed:
 
 ```bash
-flatpak list --app | grep com.veilid.veilidchat
+flatpak list --app | grep com.veilid.ally
 ```
 
-> Flutter App	com.veilid.veilidchat	1.0.0	master	flutterapp-origin	user
+> Flutter App	com.veilid.ally	1.0.0	master	flutterapp-origin	user
 
 If we search for "Flutter App" in the system application menu there should be an
 entry for the app with the proper name and icon.
@@ -80,5 +80,5 @@ entry for the app with the proper name and icon.
 We can also uninstall our test flatpak:
 
 ```bash
-flatpak remove com.veilid.veilidchat
+flatpak remove com.veilid.ally
 ```

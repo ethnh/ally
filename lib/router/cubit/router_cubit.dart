@@ -7,12 +7,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stream_transform/stream_transform.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../account_manager/account_manager.dart';
+import '../../graphview/graph_page.dart';
 import '../../layout/layout.dart';
 import '../../settings/settings.dart';
 import '../../tools/tools.dart';
 import '../../veilid_processor/views/developer.dart';
+import '../../apiglobalmapview/map.dart';
 
 part 'router_cubit.freezed.dart';
 part 'router_cubit.g.dart';
@@ -90,7 +94,17 @@ class RouterCubit extends Cubit<RouterState> {
         GoRoute(
           path: '/developer',
           builder: (context, state) => const DeveloperPage(),
-        )
+        ),
+        GoRoute(path: '/map', builder: (context, state) => FlutterMap(
+        options: const MapOptions(
+          initialCenter: LatLng(29.8884, -97.9384),
+          initialZoom: 5,
+        ),
+        children: [
+          openStreetMapTileLayer,
+          ],
+      ),),
+      GoRoute(path: '/graph', builder: (context, state) => const GraphExamplePage()),
       ];
 
   /// Redirects when our state changes
@@ -100,6 +114,10 @@ class RouterCubit extends Cubit<RouterState> {
     switch (goRouterState.matchedLocation) {
       case '/new_account':
         return state.hasAnyAccount ? '/' : null;
+      case '/map':
+        return '/map';
+      case '/graph':
+        return '/graph';
       case '/':
         if (!state.hasAnyAccount) {
           return '/new_account';

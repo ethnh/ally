@@ -12,7 +12,7 @@ set -x
 
 
 # No spaces in project name.
-projectName=VeilidChat
+projectName=Ally
 projectId=com.veilid.veilidchat
 executableName=veilidchat
 

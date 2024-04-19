@@ -5,10 +5,10 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = VeilidChat
+PRODUCT_NAME = Ally
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.veilid.veilidchat
+PRODUCT_BUNDLE_IDENTIFIER = com.veilid.ally
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2023 The VeilidChat Authors. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2023 The Ally Authors. All rights reserved.

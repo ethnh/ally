@@ -4,9 +4,9 @@
     https://www.freedesktop.org/software/appstream/metainfocreator/#/
 -->
 <component type="desktop-application">
-  <id>com.veilid.veilidchat</id>
-  <name>VeilidChat</name>
-  <summary>VeilidChat Private Messaging</summary>
+  <id>com.veilid.ally</id>
+  <name>Ally</name>
+  <summary>Ally Private Messaging</summary>
   <developer_name>Veilid Foundation Inc</developer_name>
   <url type="homepage">https://veilid.com/chat</url>
   <metadata_license>MIT</metadata_license>
@@ -19,7 +19,7 @@
   <description>
     <p>TODO</p>
   </description>
-  <launchable type="desktop-id">com.veilid.veilidchat.desktop</launchable>
+  <launchable type="desktop-id">com.veilid.ally.desktop</launchable>
   <screenshots>
     <screenshot type="default">
       <image>TODO</image>

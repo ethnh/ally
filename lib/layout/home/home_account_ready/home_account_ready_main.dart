@@ -5,11 +5,15 @@ import 'package:flutter_translate/flutter_translate.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../account_manager/account_manager.dart';
+import '../../../apiglobalmapview/map.dart';
+import '../../../blogpost/blog_post_list.dart';
 import '../../../chat/chat.dart';
+import '../../../graphview/graph_page.dart';
 import '../../../theme/theme.dart';
 import '../../../tools/tools.dart';
 import 'main_pager/main_pager.dart';
-
+import 'main_pager/page_cubit.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 class HomeAccountReadyMain extends StatefulWidget {
   const HomeAccountReadyMain({super.key});
 
@@ -65,15 +69,66 @@ class _HomeAccountReadyMainState extends State<HomeAccountReadyMain> {
       builder: (context) =>
           Material(color: Colors.transparent, child: buildUserPanel()));
 
-  Widget buildTabletRightPane(BuildContext context) {
-    final activeChatRemoteConversationKey =
-        context.watch<ActiveChatCubit>().state;
+Widget buildTabletRightPane(BuildContext context) {
+  final currentPage = context.watch<PageCubit>().state;
+  if (currentPage < 2) {
+    final activeChatRemoteConversationKey = context.watch<ActiveChatCubit>().state;
     if (activeChatRemoteConversationKey == null) {
       return const EmptyChatWidget();
     }
     return ChatComponent.builder(
-        remoteConversationRecordKey: activeChatRemoteConversationKey);
+      remoteConversationRecordKey: activeChatRemoteConversationKey,
+    );
+  } else if (currentPage == 2) {
+    return InteractiveCityMapPage();
+  } else if (currentPage == 3) {
+    return BlocBuilder<BlogCubit, BlogPost?>(
+      builder: (context, activeBlog) {
+        if (activeBlog != null) {
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  activeBlog.title,
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'By ${activeBlog.author}',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+                SizedBox(height: 16),
+                Expanded(
+                  child: Markdown(data: activeBlog.content),
+                ),
+              ],
+            ),
+          );
+        } else {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.article, size: 48),
+                SizedBox(height: 16),
+                Text(
+                  'No blog post selected',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ],
+            ),
+          );
+        }
+      },
+    );
+  } else if (currentPage == 4) {
+    return const GraphExamplePage();
+  } else {
+    return const Text("Not Sure How You Ended Up Here..");
   }
+}
 
   // ignore: prefer_expression_function_bodies
   Widget buildTablet(BuildContext context) {

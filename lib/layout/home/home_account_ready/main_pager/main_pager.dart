@@ -6,13 +6,113 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_translate/flutter_translate.dart';
 import 'package:preload_page_view/preload_page_view.dart';
 import 'package:stylish_bottom_bar/stylish_bottom_bar.dart';
+import 'package:provider/provider.dart';
 
+import '../../../../blogpost/blog_post_list.dart';
 import '../../../../chat/chat.dart';
 import '../../../../contact_invitation/contact_invitation.dart';
+import '../../../../graphview/awesome.dart';
 import '../../../../theme/theme.dart';
+import '../../../layout.dart';
 import 'account_page.dart';
 import 'bottom_sheet_action_button.dart';
 import 'chats_page.dart';
+import 'page_cubit.dart';
+
+List<BlogPost> getSampleBlogPosts() {
+  return [
+    BlogPost(
+      title: "The Future of Technology",
+      content: "# Exploring upcoming trends in AI, robotics, and quantum computing. The future is closer than you think, with technology rapidly evolving.",
+      author: "aaa",
+    ),
+    BlogPost(
+      title: "Sustainable Energy for the Next Century",
+            author: "aaa",
+      content: "## Renewable energy sources such as solar, wind, and hydroelectric power are paving the way for a cleaner, more sustainable future."
+    ),
+    BlogPost(
+      title: "The Impact of Global Warming",
+            author: "abc",
+      content: "Global warming remains one of the most significant challenges of our time, affecting wildlife, weather patterns, and global sea levels."
+    ),
+    BlogPost(
+      title: "Revolutionizing Education Through Online Learning",
+            author: "name123",
+      content: "### The rise of online education offers unprecedented access to learning resources, expanding opportunities worldwide."
+    ),
+    BlogPost(
+      title: "The Art of Culinary Innovations",
+            author: "ME!!!",
+      content: "Culinary art is not just about cooking; **it's about combining flavors and techniques** to create new dishes that amaze and delight.",
+      owned: true,
+    ),
+    BlogPost(
+      title: "Exploring the Depths: Oceanography",
+            author: "Ally",
+      content: "*Oceanography helps us understand the complexity and breadth of ocean ecosystems and their* `importance` ```to global health```."
+    ),
+  ];
+}
+
+List<MapLocation> getSampleMapLocations() {
+  return [
+    MapLocation(
+      name: "Central Park",
+      coordinates: "40.7829° N, 73.9654° W",
+    ),
+    MapLocation(
+      name: "Eiffel Tower",
+      coordinates: "48.8584° N, 2.2945° E",
+    ),
+    MapLocation(
+      name: "Great Pyramid of Giza",
+      coordinates: "29.9792° N, 31.1342° E",
+    ),
+    MapLocation(
+      name: "Sydney Opera House",
+      coordinates: "33.8568° S, 151.2153° E",
+    ),
+    MapLocation(
+      name: "Machu Picchu",
+      coordinates: "13.1631° S, 72.5450° W",
+    ),
+    MapLocation(
+      name: "Taj Mahal",
+      coordinates: "27.1751° N, 78.0421° E",
+    ),
+  ];
+}
+
+List<User> getSampleUsers() {
+  return [
+    User(
+      name: "Alice",
+      pubkey: "1A2B3C4D5E6F7G8H9I0J",
+    ),
+    User(
+      name: "Bob",
+      pubkey: "0J9I8H7G6F5E4D3C2B1A",
+    ),
+    User(
+      name: "Charlie",
+      pubkey: "A1B2C3D4E5F6G7H8I9J0",
+    ),
+    User(
+      name: "David",
+      pubkey: "0I9H8G7F6E5D4C3B2A1J",
+    ),
+    User(
+      name: "Eve",
+      pubkey: "J1A2B3C4D5E6F7G8H9I0",
+    ),
+    User(
+      name: "Frank",
+      pubkey: "0A1B2C3D4E5F6G7H8I9J",
+    ),
+  ];
+}
+
 
 class MainPager extends StatefulWidget {
   const MainPager({super.key});
@@ -30,7 +130,7 @@ class MainPagerState extends State<MainPager> with TickerProviderStateMixin {
   var _currentPage = 0;
   final pageController = PreloadPageController();
 
-  final _selectedIconList = <IconData>[Icons.person, Icons.chat];
+  final _selectedIconList = <IconData>[Icons.person, Icons.chat, Icons.map, Icons.description, Icons.diversity_1];
   // final _unselectedIconList = <IconData>[
   //   Icons.chat_outlined,
   //   Icons.person_outlined
@@ -38,10 +138,12 @@ class MainPagerState extends State<MainPager> with TickerProviderStateMixin {
   final _fabIconList = <IconData>[
     Icons.person_add_sharp,
     Icons.add_comment_sharp,
+    Icons.map, Icons.description, Icons.diversity_1
   ];
   final _bottomLabelList = <String>[
     translate('pager.contacts'),
     translate('pager.chats'),
+    translate('pager.map'), translate('pager.description'), translate('pager.diversity_1')
   ];
 
   //////////////////////////////////////////////////////////////////
@@ -131,7 +233,7 @@ class MainPagerState extends State<MainPager> with TickerProviderStateMixin {
       return newChatBottomSheetBuilder(sheetContext, context);
     } else {
       // Unknown error
-      return debugPage('unknown page');
+      return debugPage('TBD - Undesigned');
     }
   }
 
@@ -153,10 +255,15 @@ class MainPagerState extends State<MainPager> with TickerProviderStateMixin {
                 setState(() {
                   _currentPage = index;
                 });
+                context.read<PageCubit>().setPage(index);
               },
-              children: const [
+              children: [
                 AccountPage(),
                 ChatsPage(),
+                SearchableMapLocationListWidget(locations: getSampleMapLocations()),
+                SearchableBlogPostListWidget(blogPosts: getSampleBlogPosts()),
+                SearchableUserListWidget(users: getSampleUsers()),
+                
               ])),
       // appBar: AppBar(
       //   toolbarHeight: 24,

@@ -9,7 +9,9 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:provider/provider.dart';
 
 import 'account_manager/account_manager.dart';
+import 'blogpost/blog_post_list.dart';
 import 'init.dart';
+import 'layout/home/home_account_ready/main_pager/page_cubit.dart';
 import 'layout/splash.dart';
 import 'router/router.dart';
 import 'settings/settings.dart';
@@ -38,6 +40,9 @@ class VeilidChatApp extends StatelessWidget {
         PreferencesRepository.instance.value.themePreferences.themeData();
     ThemeSwitcher.of(context).changeTheme(theme: theme);
   }
+
+  
+
 
   Widget _buildShortcuts(
           {required BuildContext context,
@@ -94,7 +99,9 @@ class VeilidChatApp extends StatelessWidget {
                   BlocProvider<PreferencesCubit>(
                     create: (context) =>
                         PreferencesCubit(PreferencesRepository.instance),
-                  )
+                  ),
+                  BlocProvider<PageCubit>(create: (_) => PageCubit()),
+                  BlocProvider<BlogCubit>(create: (context) => BlogCubit()),
                 ],
                 child: BackgroundTicker(
                     child: _buildShortcuts(

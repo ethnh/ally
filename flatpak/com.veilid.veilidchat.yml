@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/flatpak/flatpak-builder/main/data/flatpak-manifest.schema.json
 
 ---
-app-id: com.veilid.veilidchat
+app-id: com.veilid.ally
 runtime: org.gnome.Platform
 runtime-version: "45"
 sdk: org.gnome.Sdk
-command: veilidchat
+command: ally
 separate-locales: false
 finish-args:
   - --share=ipc
@@ -16,7 +16,7 @@ finish-args:
   - --share=network
   - --talk-name=org.freedesktop.secrets
 modules:
-  - name: VeilidChat
+  - name: Ally
     buildsystem: simple
     only-arches:
       - x86_64
@@ -29,8 +29,8 @@ modules:
       - type: file
         path: build-flatpak.sh
       - type: file
-        path: com.veilid.veilidchat.png
+        path: com.veilid.ally.png
       - type: file
-        path: com.veilid.veilidchat.desktop
+        path: com.veilid.ally.desktop
       - type: file
-        path: com.veilid.veilidchat.metainfo.xml
+        path: com.veilid.ally.metainfo.xml

@@ -26,6 +26,6 @@ Widget newChatBottomSheetBuilder(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Text(
-                        'Group and custom chat functionality is not available yet')
+                        'Please try from "contacts" for now, group chat functionality TODO.')
                   ]).paddingAll(16))));
 }

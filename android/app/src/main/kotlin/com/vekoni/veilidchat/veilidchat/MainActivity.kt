@@ -1,4 +1,4 @@
-package com.veilid.veilidchat
+package com.veilid.ally
 
 import io.flutter.embedding.android.FlutterActivity
 
